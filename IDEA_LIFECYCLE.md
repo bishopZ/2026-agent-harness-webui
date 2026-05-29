@@ -2,7 +2,7 @@
 
 This document defines every stage an idea moves through - from raw capture to active growth. Each stage includes a description, what the Agent needs to begin, what the Agent will produce, and the approval gate criteria before moving on.
 
-For system context, see `SYSTEM_OVERVIEW.md`. For **Initiative priority** (tier points), see `DASHBOARD.md`. For combined score (tier + project + idea + staleness), tie-breakers, and picking the next idea, see `PRIORITIZATION.md`. For the rest of the dashboard and approval queue, see `DASHBOARD.md`. For each initiative’s ideas, see that initiative’s `ideas.md`.
+For system context, see `SYSTEM_OVERVIEW.md`. For initiative tier, project/idea priority, lifecycle, and approval queue, see `priorities.json` and [`docs/priorities-registry.md`](docs/priorities-registry.md). For combined score and picking the next idea, see `PRIORITIZATION.md`.
 
 **Rules and agent profiles.** Every stage in this document operates under the rules in `rules/`. The six rule files — evidence and verification, incremental execution, context engineering, decision records, anti-rationalization, and red flags — apply at every stage. At approval gates that involve depth or risk, The Agent also runs one or more of the specialist profiles in `agents/` (`quality-reviewer`, `evaluator`, `risk-auditor`). Each stage below cites which rules to load and which profiles, if any, to invoke.
 
@@ -27,7 +27,7 @@ At any point, an idea may move to `On Hold` or `Dropped`. While waiting on you a
 **How to avoid “wrong PRD” confusion**
 
 1. **Name the deliverable in the Brief** — In `01_brief.md`, state explicitly what ships when the idea completes: e.g. “single competitive research document in `outputs/` and wiki `market/` update,” not “inform the PRD” without naming the terminal artifact.
-2. **Tag the idea row or front matter** — Use **Notes** in `ideas.md` or optional YAML (e.g. `deliverable_class: research_document`) so Stage 4 is interpreted as **requirements for that work product**, not as an app specification. Parent **project** folder (e.g. Love Street) provides context; it does **not** redefine the idea’s deliverable.
+2. **Tag the idea or front matter** — Use **notes** in `priorities.json` or optional YAML (e.g. `deliverable_class: research_document`) so Stage 4 is interpreted as **requirements for that work product**, not as an app specification. Parent **project** folder (e.g. Love Street) provides context; it does **not** redefine the idea’s deliverable.
 3. **Stage 4 still applies, but the content changes** — `03_prd.md` should specify **scope, sections, acceptance criteria, and verification** for the document (or other non-code deliverable), **not** product user stories unless the idea is actually to build the product.
 4. **Research-only or doc-only exit** — If the Brief defines the outcome as “published research” or “one report,” then after approved Research the work is usually: thin **Design** (outline, template, canonical location) → **Build** (write, cite, place in `outputs/` per `SYSTEM_OVERVIEW.md`) → **Evaluation** (stakeholder read, fact-check) → **Done** or a single **Launch** if the “release” is publication. **Marketing / Growth** may be waived with rationale in **Notes** when they do not apply.
 5. **When full product stages are required** — Use the full map through Launch (and beyond) when the idea commits to shipping or operating something in market (app, recurring service, public campaign with ongoing metrics). When in doubt, the Brief’s **success criteria** decide: if they only mention a document or a wiki update, do not generate an app PRD.
@@ -65,11 +65,11 @@ During **Marketing**, wiki updates emphasize initiative-wide messaging, channel,
 
 - Give the idea a name
 - Optionally write one or two sentences describing it
-- Add it to that initiative’s `ideas.md` under the correct **project** with status `Backlog`
+- Add it to `priorities.json` under the correct initiative and **project** with `lifecycle` `Backlog`
 
 **What The Agent does:** Nothing yet. This stage is owned entirely by you.
 
-**Artifact:** An entry in that initiative’s `ideas.md`.
+**Artifact:** An entry in `priorities.json` for that initiative and project.
 
 **Rules to load:** None — this stage is pre-work.
 
@@ -589,7 +589,7 @@ An idea can move to either of these states from any stage.
 
 | Stage             | Status Label   | Key Artifact                                                                  | Rules most relevant                                                                    | Specialist profiles at gate                              | Wiki Domains                                                                          | Approval Question                                              |
 | ----------------- | -------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 0 – Capture       | `Backlog`      | Entry in initiative `ideas.md`                                                | —                                                                                      | —                                                        | —                                                                                     | N/A - owned by you                                             |
+| 0 – Capture       | `Backlog`      | Entry in `priorities.json`                                                | —                                                                                      | —                                                        | —                                                                                     | N/A - owned by you                                             |
 | 1 – Brief         | `Brief`        | `01_brief.md`                                                                 | context-engineering, evidence                                                          | —                                                        | identity, customers / audience                                                        | Is this worth pressure-testing (or waived)?                    |
 | 2 – Pressure Test | `PressureTest` | `02_pressure_test.md`                                                         | evidence, anti-rationalization, red-flags                                              | —                                                        | market, customers / audience, offerings, identity (+ `[USER.md](USER.md)`)            | Are we honest about risks and next experiments?                |
 | 3 – Research      | `Research`     | `02_market_research.md` + `02b_customer_discovery.md`                         | evidence, context-engineering                                                          | evaluator (on synthesis if called)                       | market, customers / audience                                                          | Is the opportunity real + do people confirm it?                |

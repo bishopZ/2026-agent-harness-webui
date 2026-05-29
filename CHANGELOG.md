@@ -13,7 +13,16 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
-_Changes staged for the next release go here._
+### Changed
+
+- **Breaking (demo harness):** `priorities.json` is the single registry; removed `DASHBOARD.md` and per-initiative `ideas.md`. Agents and skills update `priorities.json` + artifact folders only.
+- Web UI approval queue reads `lifecycle: "In Review"` from `priorities.json` (fixes drift when markdown registries were updated without the sidecar).
+- Reconcile infers `In Review` from brief artifacts when adding new idea keys.
+- Added `npm run migrate-registry`, `docs/priorities-registry.md`, and `src/server/utils/registryWrite.ts`.
+
+### Removed
+
+- `DASHBOARD.md` and `initiatives/*/ideas.md` from this harness repo (use `priorities.json` instead).
 
 ---
 

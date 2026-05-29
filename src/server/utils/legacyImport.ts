@@ -1,19 +1,15 @@
 /**
- * Legacy import — Task 8
+ * Legacy markdown import — seeds or merges priorities.json from DASHBOARD.md + ideas.md.
  *
- * When priorities.json is ABSENT and DASHBOARD.md is present at HARNESS_ROOT,
- * seeds priorities.json by parsing:
- *   1. DASHBOARD.md  → initiative tier + lastWork
- *   2. initiatives/[Name]/ideas.md → project priority + idea lifecycle/priority
- *
- * All parse errors are warnings — they are never fatal.
- * This module is skipped entirely if priorities.json already exists.
+ * - `runLegacyImport`: one-time seed when priorities.json is absent (not run on server boot).
+ * - `mergeMarkdownIntoSidecar`: overlay agent fields from markdown onto existing priorities.json.
  */
 
 import fs from 'fs';
 import path from 'path';
 import writeFileAtomic from 'write-file-atomic';
 import { discoverHarness } from './discoverHarness.js';
+import { reconcile } from './reconcileSidecar.js';
 import {
   PrioritiesFile,
   emptySidecar,
@@ -21,55 +17,45 @@ import {
   defaultProject,
   defaultIdea,
   todayISO,
+  IdeaEntry,
+  ProjectEntry,
+  InitiativeEntry,
 } from './sidecarTypes.js';
 
 // ─── Markdown table helpers ───────────────────────────────────────────────────
 
 /** Strip common Markdown inline formatting from a cell value. */
-function stripMarkdown(raw: string): string {
+export function stripMarkdown(raw: string): string {
   return raw
-    .replace(/\*\*([^*]+)\*\*/g, '$1')  // **bold**
-    .replace(/\*([^*]+)\*/g, '$1')       // *italic*
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // [text](url)
-    .replace(/`([^`]+)`/g, '$1')         // `code`
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
     .trim();
 }
 
-/**
- * Parse a Markdown pipe table into rows of trimmed cell strings.
- * Skips separator rows (cells consisting only of dashes and colons).
- */
-function parseTable(lines: string[]): string[][] {
+export function parseTable(lines: string[]): string[][] {
   const rows: string[][] = [];
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed.startsWith('|')) continue;
     const cells = trimmed
       .split('|')
-      .slice(1, -1)           // drop the leading/trailing empty strings
-      .map(c => c.trim());
-    // Skip separator rows: every cell is dashes/colons
-    if (cells.every(c => /^[-:]+$/.test(c))) continue;
+      .slice(1, -1)
+      .map((c) => c.trim());
+    if (cells.every((c) => /^[-:]+$/.test(c))) continue;
     if (cells.length === 0) continue;
     rows.push(cells);
   }
   return rows;
 }
 
-/**
- * Extract the URL from a Markdown link like `[text](url)`.
- * Returns the plain text if no link is found.
- */
 function extractLinkUrl(cell: string): string | null {
   const m = cell.match(/\(([^)]+)\)/);
   return m ? m[1].trim() : null;
 }
 
-/**
- * Map a priority label (from ideas.md) to one of the canonical strings.
- * Falls back to "Medium" on unrecognised input.
- */
-function normalisePriority(raw: string): string {
+export function normalisePriority(raw: string): string {
   const lower = raw.toLowerCase();
   if (lower === 'high' || lower === '1') return 'High';
   if (lower === 'low' || lower === '3') return 'Low';
@@ -78,18 +64,13 @@ function normalisePriority(raw: string): string {
 
 // ─── DASHBOARD.md parser ──────────────────────────────────────────────────────
 
-interface DashboardInitiative {
-  folderName: string;   // derived from the URL in the Markdown link
+export interface DashboardInitiative {
+  folderName: string;
   tier: number;
   lastWork: string;
 }
 
-/**
- * Parse the Initiatives table from DASHBOARD.md.
- *
- * Expected columns: Tier points | Initiative (link) | What | Last initiative work
- */
-function parseDashboard(dashboardPath: string): DashboardInitiative[] {
+export function parseDashboard(dashboardPath: string): DashboardInitiative[] {
   const results: DashboardInitiative[] = [];
   let content: string;
   try {
@@ -99,17 +80,14 @@ function parseDashboard(dashboardPath: string): DashboardInitiative[] {
     return results;
   }
 
-  // Find the Initiatives section
   const lines = content.split('\n');
   let inInitiativesTable = false;
 
   for (const line of lines) {
-    // The initiatives table appears after a heading containing "## Initiatives"
     if (/^##\s+Initiatives/.test(line.trim())) {
       inInitiativesTable = true;
       continue;
     }
-    // Stop when we hit the next top-level section
     if (inInitiativesTable && /^##\s/.test(line.trim())) {
       inInitiativesTable = false;
       break;
@@ -119,32 +97,28 @@ function parseDashboard(dashboardPath: string): DashboardInitiative[] {
     const trimmed = line.trim();
     if (!trimmed.startsWith('|')) continue;
 
-    const cells = trimmed.split('|').slice(1, -1).map(c => c.trim());
+    const cells = trimmed.split('|').slice(1, -1).map((c) => c.trim());
     if (cells.length < 4) continue;
-    if (cells.every(c => /^[-:| ]+$/.test(c))) continue; // separator row
+    if (cells.every((c) => /^[-:| ]+$/.test(c))) continue;
 
-    // Col 0: tier points
     const tierRaw = stripMarkdown(cells[0]);
+    if (/tier\s*points/i.test(tierRaw)) continue;
     const tier = parseInt(tierRaw, 10);
     if (isNaN(tier)) {
       console.warn(`[legacyImport] Could not parse tier from: "${cells[0]}"`);
       continue;
     }
 
-    // Col 1: [Initiative Name](initiatives/FolderName/ideas.md)
     const url = extractLinkUrl(cells[1]);
     if (!url) {
-      // Might be a plain name — use it directly
       const name = stripMarkdown(cells[1]);
       if (!name) continue;
       const lastWork = stripMarkdown(cells[3]) || '';
       results.push({ folderName: name, tier, lastWork });
       continue;
     }
-    // Extract folder name from URL like "initiatives/Time2Magic/ideas.md"
     const urlDecoded = decodeURIComponent(url);
     const segments = urlDecoded.replace(/\\/g, '/').split('/');
-    // Structure: initiatives / [FolderName] / ideas.md
     const folderName = segments[1] ?? stripMarkdown(cells[1]);
     if (!folderName) {
       console.warn(`[legacyImport] Could not extract folder from URL: "${url}"`);
@@ -160,29 +134,22 @@ function parseDashboard(dashboardPath: string): DashboardInitiative[] {
 
 // ─── ideas.md parser ─────────────────────────────────────────────────────────
 
-interface ParsedIdea {
+export interface ParsedIdea {
   name: string;
   status: string;
   priority: string;
+  lastUpdated: string;
+  notes: string;
 }
 
-interface ParsedProject {
+export interface ParsedProject {
   name: string;
   priority: string;
+  purpose: string;
   ideas: ParsedIdea[];
 }
 
-/**
- * Parse an initiative's ideas.md.
- *
- * Extracts:
- * - Active Projects table: project name → priority
- * - Each "## Project: [Name]" section's idea table: idea name, status, priority
- *
- * Also copies Completed/Dropped Projects rows to project-history.md in the
- * initiative folder.
- */
-function parseIdeasMd(ideasPath: string): ParsedProject[] {
+export function parseIdeasMd(ideasPath: string): ParsedProject[] {
   const projects: ParsedProject[] = [];
   let content: string;
   try {
@@ -193,9 +160,9 @@ function parseIdeasMd(ideasPath: string): ParsedProject[] {
   }
 
   const lines = content.split('\n');
-
-  // ── Pass 1: Active Projects table ────────────────────────────────────────
   const projectPriorities: Record<string, string> = {};
+  const projectPurposes: Record<string, string> = {};
+
   {
     let inActiveProjects = false;
     const tableLines: string[] = [];
@@ -212,16 +179,18 @@ function parseIdeasMd(ideasPath: string): ParsedProject[] {
     }
 
     const rows = parseTable(tableLines);
-    // Columns: Project | Purpose | Priority  (skip header row: first row has "Project" as first cell)
     for (const row of rows) {
-      if (row[0]?.toLowerCase() === 'project') continue; // header
+      if (row[0]?.toLowerCase() === 'project') continue;
       const projName = stripMarkdown(row[0] ?? '');
+      const purpose = stripMarkdown(row[1] ?? '');
       const priority = normalisePriority(stripMarkdown(row[2] ?? 'Medium'));
-      if (projName) projectPriorities[projName] = priority;
+      if (projName) {
+        projectPriorities[projName] = priority;
+        projectPurposes[projName] = purpose;
+      }
     }
   }
 
-  // ── Pass 2: Per-project idea tables ──────────────────────────────────────
   {
     let currentProject: string | null = null;
     let collectingIdeas = false;
@@ -232,25 +201,26 @@ function parseIdeasMd(ideasPath: string): ParsedProject[] {
       const rows = parseTable(ideaLines);
       const ideas: ParsedIdea[] = [];
       for (const row of rows) {
-        // Header row: first cell is "Idea" or similar
         if (row[0]?.toLowerCase() === 'idea') continue;
         const name = stripMarkdown(row[0] ?? '');
         const status = stripMarkdown(row[1] ?? 'Backlog');
         const priority = normalisePriority(stripMarkdown(row[2] ?? 'Medium'));
+        const lastUpdated = stripMarkdown(row[3] ?? '') || todayISO();
+        const notes = stripMarkdown(row[4] ?? '');
         if (name && name !== '*(Add ideas here)*') {
-          ideas.push({ name, status, priority });
+          ideas.push({ name, status, priority, lastUpdated, notes });
         }
       }
       projects.push({
         name: currentProject,
         priority: projectPriorities[currentProject] ?? 'Medium',
+        purpose: projectPurposes[currentProject] ?? '',
         ideas,
       });
       ideaLines.length = 0;
     };
 
     for (const line of lines) {
-      // Match "## Project: SomeName"
       const projectMatch = line.trim().match(/^##\s+Project:\s+(.+)$/);
       if (projectMatch) {
         flushProject();
@@ -258,7 +228,6 @@ function parseIdeasMd(ideasPath: string): ParsedProject[] {
         collectingIdeas = true;
         continue;
       }
-      // Stop collecting at the next heading of same or higher level that is NOT a project
       if (/^##\s/.test(line.trim()) && !line.trim().match(/^##\s+Project:/)) {
         flushProject();
         currentProject = null;
@@ -269,19 +238,12 @@ function parseIdeasMd(ideasPath: string): ParsedProject[] {
         ideaLines.push(line);
       }
     }
-    // Flush the last project
     flushProject();
   }
 
   return projects;
 }
 
-// ─── project-history.md writer ────────────────────────────────────────────────
-
-/**
- * Copy Completed Projects and Dropped Projects table content from ideas.md
- * into initiatives/[Name]/project-history.md.  Non-fatal if it fails.
- */
 function writeProjectHistory(ideasPath: string, initiativeDir: string): void {
   let content: string;
   try {
@@ -302,7 +264,11 @@ function writeProjectHistory(ideasPath: string, initiativeDir: string): void {
   for (const sectionHeader of sections) {
     let inSection = false;
     for (const line of lines) {
-      if (line.trim() === sectionHeader) { inSection = true; historyLines.push(line); continue; }
+      if (line.trim() === sectionHeader) {
+        inSection = true;
+        historyLines.push(line);
+        continue;
+      }
       if (inSection && /^##\s/.test(line.trim()) && line.trim() !== sectionHeader) break;
       if (inSection) historyLines.push(line);
     }
@@ -317,49 +283,34 @@ function writeProjectHistory(ideasPath: string, initiativeDir: string): void {
   }
 }
 
-// ─── Main export ──────────────────────────────────────────────────────────────
-
 const SIDECAR_FILENAME = 'priorities.json';
 
+function loadSidecarFile(harnessRoot: string): PrioritiesFile | null {
+  const filePath = path.join(harnessRoot, SIDECAR_FILENAME);
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8')) as PrioritiesFile;
+  } catch (err) {
+    console.warn(`[legacyImport] Could not parse ${filePath}:`, err);
+    return null;
+  }
+}
+
 /**
- * Run the legacy import.
- *
- * Conditions for running:
- * - priorities.json does NOT exist at HARNESS_ROOT
- * - DASHBOARD.md DOES exist at HARNESS_ROOT
- *
- * If priorities.json already exists, this function returns immediately without
- * reading or modifying anything.
+ * Build a full PrioritiesFile from DASHBOARD.md + ideas.md + filesystem discovery.
  */
-export async function runLegacyImport(harnessRoot: string): Promise<void> {
-  const sidecarFilePath = path.join(harnessRoot, SIDECAR_FILENAME);
+export function importFromMarkdown(harnessRoot: string): PrioritiesFile {
   const dashboardPath = path.join(harnessRoot, 'DASHBOARD.md');
+  const dashboardEntries = fs.existsSync(dashboardPath)
+    ? parseDashboard(dashboardPath)
+    : [];
 
-  // Guard: skip if sidecar already exists
-  if (fs.existsSync(sidecarFilePath)) {
-    console.log('[legacyImport] priorities.json already exists — skipping legacy import.');
-    return;
-  }
-
-  // Guard: skip if no DASHBOARD.md
-  if (!fs.existsSync(dashboardPath)) {
-    console.log('[legacyImport] No DASHBOARD.md found — skipping legacy import.');
-    return;
-  }
-
-  console.log('[legacyImport] Seeding priorities.json from DASHBOARD.md + ideas.md…');
-
-  // 1. Parse DASHBOARD.md for tier + lastWork per initiative
-  const dashboardEntries = parseDashboard(dashboardPath);
   const dashboardByFolder: Record<string, { tier: number; lastWork: string }> = {};
   for (const entry of dashboardEntries) {
     dashboardByFolder[entry.folderName] = { tier: entry.tier, lastWork: entry.lastWork };
   }
 
-  // 2. Discover the filesystem tree so we know which initiatives/projects/ideas exist
   const tree = discoverHarness(harnessRoot);
-
-  // 3. Build the sidecar
   const sidecar: PrioritiesFile = emptySidecar();
 
   for (const [initFolderName, initNode] of Object.entries(tree)) {
@@ -371,26 +322,22 @@ export async function runLegacyImport(harnessRoot: string): Promise<void> {
       initEntry.lastWork = dashInfo.lastWork;
     }
 
-    // 4. Parse ideas.md for project priority + idea lifecycle/priority
     const initiativeDir = path.join(harnessRoot, 'initiatives', initFolderName);
     const ideasPath = path.join(initiativeDir, 'ideas.md');
     const parsedProjects = parseIdeasMd(ideasPath);
-
-    // Build a lookup: project name → parsed data
     const parsedByProject: Record<string, ParsedProject> = {};
     for (const pp of parsedProjects) {
       parsedByProject[pp.name] = pp;
     }
 
-    // 5. Merge parsed data into the sidecar initiative entry
     for (const [projName, projNode] of Object.entries(initNode.projects)) {
       const parsedProj = parsedByProject[projName];
       const projEntry = defaultProject();
 
       if (parsedProj) {
         projEntry.priority = parsedProj.priority;
+        projEntry.purpose = parsedProj.purpose;
 
-        // Build idea lookup from parsed ideas.md
         const parsedByIdea: Record<string, ParsedIdea> = {};
         for (const pi of parsedProj.ideas) {
           parsedByIdea[pi.name] = pi;
@@ -402,11 +349,12 @@ export async function runLegacyImport(harnessRoot: string): Promise<void> {
           if (parsedIdea) {
             ideaEntry.lifecycle = parsedIdea.status || 'Backlog';
             ideaEntry.priority = parsedIdea.priority;
+            ideaEntry.lastUpdated = parsedIdea.lastUpdated;
+            ideaEntry.notes = parsedIdea.notes;
           }
           projEntry.ideas[ideaName] = ideaEntry;
         }
       } else {
-        // No ideas.md data for this project — set all ideas to defaults
         for (const ideaName of Object.keys(projNode.ideas)) {
           projEntry.ideas[ideaName] = defaultIdea();
         }
@@ -417,11 +365,109 @@ export async function runLegacyImport(harnessRoot: string): Promise<void> {
 
     sidecar.initiatives[initFolderName] = initEntry;
 
-    // 6. Write project-history.md for this initiative
-    writeProjectHistory(ideasPath, initiativeDir);
+    if (fs.existsSync(ideasPath)) {
+      writeProjectHistory(ideasPath, initiativeDir);
+    }
   }
 
-  // 7. Write priorities.json atomically
+  sidecar.updated = todayISO();
+  return sidecar;
+}
+
+/**
+ * Overlay markdown-derived agent fields onto an existing priorities.json.
+ * Preserves structural keys from reconcile; markdown wins for lifecycle, notes, lastUpdated, lastWork, tier.
+ */
+export async function mergeMarkdownIntoSidecar(harnessRoot: string): Promise<PrioritiesFile> {
+  const dashboardPath = path.join(harnessRoot, 'DASHBOARD.md');
+  let hasIdeasMd = false;
+  const initiativesDir = path.join(harnessRoot, 'initiatives');
+  if (fs.existsSync(initiativesDir)) {
+    try {
+      hasIdeasMd = fs.readdirSync(initiativesDir, { withFileTypes: true }).some(
+        (e) =>
+          e.isDirectory() &&
+          fs.existsSync(path.join(initiativesDir, e.name, 'ideas.md'))
+      );
+    } catch {
+      hasIdeasMd = false;
+    }
+  }
+  const hasMarkdown = fs.existsSync(dashboardPath) || hasIdeasMd;
+
+  if (!hasMarkdown) {
+    console.log('[legacyImport] No DASHBOARD.md or ideas.md found — running reconcile only.');
+    return reconcile(harnessRoot);
+  }
+
+  const fromMarkdown = importFromMarkdown(harnessRoot);
+  let sidecar = loadSidecarFile(harnessRoot);
+
+  if (!sidecar) {
+    sidecar = fromMarkdown;
+  } else {
+    for (const [initName, mdInit] of Object.entries(fromMarkdown.initiatives)) {
+      if (!sidecar.initiatives[initName]) {
+        sidecar.initiatives[initName] = mdInit;
+        continue;
+      }
+      const existingInit: InitiativeEntry = sidecar.initiatives[initName];
+      if (mdInit.tier) existingInit.tier = mdInit.tier;
+      if (mdInit.lastWork) existingInit.lastWork = mdInit.lastWork;
+
+      for (const [projName, mdProj] of Object.entries(mdInit.projects)) {
+        if (!existingInit.projects[projName]) {
+          existingInit.projects[projName] = mdProj;
+          continue;
+        }
+        const existingProj: ProjectEntry = existingInit.projects[projName];
+        existingProj.priority = mdProj.priority;
+        if (mdProj.purpose) existingProj.purpose = mdProj.purpose;
+
+        for (const [ideaName, mdIdea] of Object.entries(mdProj.ideas)) {
+          if (!existingProj.ideas[ideaName]) {
+            existingProj.ideas[ideaName] = mdIdea;
+            continue;
+          }
+          const existingIdea: IdeaEntry = existingProj.ideas[ideaName];
+          existingIdea.lifecycle = mdIdea.lifecycle;
+          existingIdea.priority = mdIdea.priority;
+          existingIdea.lastUpdated = mdIdea.lastUpdated;
+          existingIdea.notes = mdIdea.notes;
+        }
+      }
+    }
+    sidecar.updated = todayISO();
+  }
+
+  const filePath = path.join(harnessRoot, SIDECAR_FILENAME);
+  await writeFileAtomic(filePath, JSON.stringify(sidecar, null, 2) + '\n');
+  console.log(`[legacyImport] Merged markdown into ${filePath}`);
+
+  return reconcile(harnessRoot);
+}
+
+/**
+ * One-time seed when priorities.json is absent and DASHBOARD.md exists.
+ * Not invoked on server startup — use `npm run migrate-registry` instead.
+ */
+export async function runLegacyImport(harnessRoot: string): Promise<void> {
+  const sidecarFilePath = path.join(harnessRoot, SIDECAR_FILENAME);
+  const dashboardPath = path.join(harnessRoot, 'DASHBOARD.md');
+
+  if (fs.existsSync(sidecarFilePath)) {
+    console.log('[legacyImport] priorities.json already exists — skipping seed.');
+    return;
+  }
+
+  if (!fs.existsSync(dashboardPath)) {
+    console.log('[legacyImport] No DASHBOARD.md found — skipping seed.');
+    return;
+  }
+
+  console.log('[legacyImport] Seeding priorities.json from DASHBOARD.md + ideas.md…');
+  const sidecar = importFromMarkdown(harnessRoot);
+
   try {
     await writeFileAtomic(sidecarFilePath, JSON.stringify(sidecar, null, 2) + '\n');
     console.log(`[legacyImport] priorities.json written to ${sidecarFilePath}`);

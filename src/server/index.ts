@@ -7,7 +7,6 @@ import { createRenderRouter } from './routes/render.js';
 import { createDiscoverRouter } from './routes/discover.js';
 import { createApprovalQueueRouter } from './routes/approvalQueue.js';
 import { createPrioritiesRouter } from './routes/priorities.js';
-import { runLegacyImport } from './utils/legacyImport.js';
 import { reconcile } from './utils/reconcileSidecar.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -15,9 +14,7 @@ const repoRoot = path.resolve(__dirname, '..', '..');
 
 const config = validateConfig();
 
-// ── Startup: legacy import (Task 8) then initial reconcile (Task 6) ───────────
-// runLegacyImport is a no-op when priorities.json already exists.
-await runLegacyImport(config.HARNESS_ROOT);
+// ── Startup: reconcile filesystem tree with priorities.json ───────────────────
 await reconcile(config.HARNESS_ROOT);
 
 const app = express();

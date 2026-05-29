@@ -14,6 +14,7 @@ export interface IdeaEntry {
 
 export interface ProjectEntry {
   priority: string;     // "High" | "Medium" | "Low"
+  purpose?: string;     // one-line project description (agent-maintained)
   ideas: Record<string, IdeaEntry>;
 }
 
@@ -40,7 +41,7 @@ export function defaultIdea(): IdeaEntry {
 }
 
 export function defaultProject(): ProjectEntry {
-  return { priority: 'Medium', ideas: {} };
+  return { priority: 'Medium', purpose: '', ideas: {} };
 }
 
 export function defaultInitiative(): InitiativeEntry {

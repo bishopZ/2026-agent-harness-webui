@@ -3,31 +3,41 @@
   "updated": "2026-05-29",
   "initiatives": {
     "My Company": {
-      "tier": 6,
-      "lastWork": "",
+      "tier": 8,
+      "lastWork": "2026-05-29",
       "projects": {
         "General": {
           "priority": "Medium",
-          "ideas": {}
+          "purpose": "Default bucket for ideas that do not belong to another project yet.",
+          "ideas": {
+            "Example Idea": {
+              "priority": "Medium",
+              "lifecycle": "In Review",
+              "lastUpdated": "2026-05-29",
+              "notes": "Brief drafted — awaiting approval → Pressure Test (02_pressure_test.md). brief"
+            }
+          }
         }
       }
     },
     "My Hobby": {
-      "tier": 4,
-      "lastWork": "",
+      "tier": 1,
+      "lastWork": "2026-04-14",
       "projects": {
         "General": {
           "priority": "Medium",
+          "purpose": "Default bucket for ideas that do not belong to another project yet.",
           "ideas": {}
         }
       }
     },
     "My Personal Life": {
-      "tier": 7,
-      "lastWork": "",
+      "tier": 6,
+      "lastWork": "2026-04-14",
       "projects": {
         "General": {
           "priority": "Medium",
+          "purpose": "Default bucket for ideas that do not belong to another project yet.",
           "ideas": {}
         }
       }

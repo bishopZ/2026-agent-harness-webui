@@ -36,7 +36,7 @@ Both variables are loaded from `.env` at startup via `dotenv`. See `.env.example
 
 ## `priorities.json`
 
-`priorities.json` lives at `HARNESS_ROOT/priorities.json`. It is the canonical sidecar store for the priority fields the Web UI reads and writes.
+`priorities.json` lives at `HARNESS_ROOT/priorities.json`. It is the **canonical registry** for initiatives, projects, ideas, tiers, priorities, and lifecycle state.
 
 **Schema overview:**
 
@@ -51,6 +51,7 @@ Both variables are loaded from `.env` at startup via `dotenv`. See `.env.example
       "projects": {
         "Project Name": {
           "priority": "High",
+          "purpose": "optional one-line description",
           "ideas": {
             "Idea Name": {
               "priority": "Medium",
@@ -81,7 +82,8 @@ Both variables are loaded from `.env` at startup via `dotenv`. See `.env.example
 | `lifecycle` | Agent (next-idea, approve-idea skills) |
 | `lastWork` | Agent (updated when initiative work completes) |
 | `lastUpdated` | Agent (updated when idea row changes) |
-| `notes` | Agent (copied from ideas.md) |
+| `notes` | Agent (next steps, links, waivers) |
+| `purpose` (project) | Agent |
 
 All writes go through a server-side allowlist that rejects any attempt to modify agent-maintained fields with HTTP 400. Writes use `write-file-atomic` — partial writes and corruption on concurrent requests are not possible.
 
@@ -93,9 +95,15 @@ The approval queue (shown at the top of the Priority workspace) is **derived**, 
 
 ---
 
-## `project-history.md`
+## Migration from markdown registries
 
-On first run (when `priorities.json` does not yet exist), the server seeds it from `DASHBOARD.md` and each initiative's `ideas.md`. As part of that import, completed and dropped project rows from `ideas.md` are written to `initiatives/[Name]/project-history.md`. This keeps the project history accessible even after project rows are removed from `ideas.md`.
+If you still have legacy `DASHBOARD.md` / `ideas.md` files, run once:
+
+```bash
+npm run migrate-registry
+```
+
+Then remove those markdown files. Agents maintain [docs/priorities-registry.md](docs/priorities-registry.md). Completed/dropped **projects** may be recorded in `initiatives/[Name]/project-history.md`.
 
 ---
 
@@ -108,9 +116,11 @@ npm test
 Runs two security and correctness checks:
 
 - **`pathGuard.test.ts`** — NF-01 (path traversal guard), NF-03 (localhost bind assertion), NF-05 (startup error message quality)
-- **`renderCheck.test.ts`** — F-07 (rendered Markdown HTML contains zero `<input>`, `<select>`, `<textarea>` elements, verified via cheerio)
+- **`renderCheck.test.ts`** — F-07 (rendered Markdown HTML contains zero form controls, via cheerio)
+- **`reconcileSidecar.test.ts`** — new ideas infer `In Review` from brief artifacts
+- **`approvalQueue.test.ts`** — queue derives from `priorities.json`
 
-Both scripts exit 0 on pass and 1 on any failure.
+All scripts exit 0 on pass and 1 on any failure.
 
 ---
 
@@ -129,11 +139,13 @@ All file-read endpoints apply a path traversal guard. Requests that resolve outs
 
 ---
 
-## Architecture notes and planned migration
+## Architecture
 
-The Web UI currently reads and writes `priorities.json` as a sidecar alongside the existing `DASHBOARD.md` and `ideas.md` files. The harness agent continues to maintain `DASHBOARD.md` and `ideas.md` as the canonical lifecycle record.
+- **Registry:** `priorities.json` (agents write lifecycle; Web UI writes tier/priority only).
+- **Artifacts:** `initiatives/[Name]/projects/[Project]/[Idea]/`.
+- **Reconcile:** every `GET /api/discover` syncs filesystem keys into `priorities.json` without overwriting existing lifecycle values.
 
-§10 of the [Design document](../../Local%20shell%20and%20priority%20forms/04_design.md) describes the planned migration path: once the Web UI is the primary write surface, `priorities.json` becomes the canonical store for all priority and lifecycle fields, and `DASHBOARD.md` / `ideas.md` become derived read-only views. That migration is a separate follow-on idea and does not affect the current tool.
+See [docs/priorities-registry.md](docs/priorities-registry.md) for agent workflows.
 
 ---
 

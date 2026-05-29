@@ -37,8 +37,8 @@ Lifecycle artifacts (`01_brief.md`, `02_pressure_test.md`, and so on) stay the *
 | `SYSTEM_OVERVIEW.md` | This document. How the system works. |
 | `PRIORITIZATION.md` | Combined score (staleness + initiative tier + project + idea), tie-breakers, and how to pick the next idea (excluding blocked work). **Tier points** are **not** edited here. |
 | `IDEA_LIFECYCLE.md` | Defines every stage an idea moves through, with templates and approval criteria. References the `rules/` and `agents/` folders at each gate. |
-| `DASHBOARD.md` | Dashboard for all initiatives, **Initiative priority** (**tier points**, high to low), and the **Awaiting your approval** queue. |
-| `initiatives/[Initiative Name]/ideas.md` | Per-initiative inventory. **Active Projects** table (with project **Priority**), ideas grouped by project, lifecycle status, Done, Dropped, and project history (Completed Projects, Dropped Projects). |
+| `priorities.json` | **Canonical registry** at repo root: initiative tier and `lastWork`, project priority and `purpose`, idea priority, `lifecycle`, `lastUpdated`, `notes`. Approval queue = ideas with `lifecycle: "In Review"`. See [`docs/priorities-registry.md`](docs/priorities-registry.md). |
+| `initiatives/[Name]/project-history.md` | Optional archive of completed/dropped **projects** (not the live registry). |
 | `USER.md` | Context about you - preferences, background, working style. The agent reads this to stay oriented. |
 | [`rules/README.md`](rules/README.md) | **Rules index** - six cross-cutting operating rules that apply across every stage: evidence-and-verification, incremental-execution, context-engineering, decision-records, anti-rationalization, and red-flags. |
 | [`agents/README.md`](agents/README.md) | **Agent profiles index** - three specialist review personas (`quality-reviewer`, `evaluator`, `risk-auditor`) invoked at specific gates in the lifecycle. |
@@ -51,9 +51,9 @@ Lifecycle artifacts (`01_brief.md`, `02_pressure_test.md`, and so on) stay the *
 
 ## How the Lifecycle Works
 
-### 1. You maintain the dashboard and each initiative’s ideas file
+### 1. You maintain priorities.json and artifact folders
 
-`DASHBOARD.md` is the high-level dashboard, the **source of truth for initiative-level priority** (the **Initiative priority** table), and the approval queue. Each initiative’s `ideas.md` is the source of truth for that initiative’s ideas, projects, statuses, **project** and **per-idea** priorities, and next actions.
+`priorities.json` is the **source of truth** for initiative tier, `lastWork`, project priority, idea priority, lifecycle, and notes. Lifecycle artifacts live under `initiatives/[Name]/projects/[Project]/[Idea]/`. The Web UI approval queue lists ideas where `lifecycle` is **In Review**.
 
 ### 2. You delegate a task to The Agent
 
@@ -79,8 +79,8 @@ The Agent will not skip planning approval or advance past a lifecycle gate witho
 
 - **Approve** - advance to the next stage
 - **Revise** - redo or adjust the current stage output
-- **Pause** - mark the idea `On Hold` in that initiative’s `ideas.md`
-- **Kill** - mark the idea `Dropped` in that initiative’s `ideas.md`
+- **Pause** - set `lifecycle` to `On Hold` in `priorities.json` with reason in `notes`
+- **Kill** - set `lifecycle` to `Dropped` in `priorities.json` (see **drop-idea** skill)
 
 ---
 
@@ -216,13 +216,13 @@ At certain gates, The Agent adopts one of three specialist profiles from [`agent
 | `Launch` | Launch plan, minimum go-live assets, rollout, and go-live. Covers pre-release work and execution. Use **Notes** in the initiative’s `ideas.md` to spell out whether you are still planning or already live. |
 | `Marketing` | Post-launch marketing pack: channel plan, copy, checklist; you publish; Agent prepares materials |
 | `Growth` | Post-marketing-pack: metrics, product iteration, user-base growth, ongoing experiments |
-| `In Review` | Stage or elaboration output is ready. Waiting on you before the next lifecycle action. No new execution on this idea until you approve or redirect. Keep this in sync with **Awaiting your approval** in `DASHBOARD.md` when the stage is done. |
+| `In Review` | Stage or elaboration output is ready. Waiting on you before the next lifecycle action. Set `lifecycle` to **In Review** in `priorities.json` when the stage is done (Web UI approval queue picks it up). |
 | `On Hold` | Paused - reason should be noted |
 | `Dropped` | Killed - reason should be noted |
 
 ### Project priority
 
-The **Active Projects** table at the top of each initiative’s `ideas.md` lists only currently active projects. Each row has **Project**, **Purpose**, and **Priority**. When a project is completed or retired, its row moves out of this table and into **## Completed Projects** or **## Dropped Projects** at the bottom of the file. **Priority** ranks whole projects so every idea under that project inherits the same project layer in the combined score (see [PRIORITIZATION.md](PRIORITIZATION.md)).
+Each **active project** in `priorities.json` under an initiative lists `priority` and `purpose`. Each row has **Project**, **Purpose**, and **Priority**. When a project is completed or retired, its row moves out of this table and into **## Completed Projects** or **## Dropped Projects** at the bottom of the file. **Priority** ranks whole projects so every idea under that project inherits the same project layer in the combined score (see [PRIORITIZATION.md](PRIORITIZATION.md)).
 
 You may set **Priority** using words or numbers (same meaning either way).
 
@@ -244,7 +244,7 @@ Use these values in the **Priority** column on each **idea** row under a **Proje
 | `Medium` or `2` | Normal queue for this project. |
 | `Low` or `3` | Backlog of value. Pick after higher-priority ideas unless you promote it. |
 
-**How layers combine.** Initiative **tier points** ([DASHBOARD.md](DASHBOARD.md)), **project_points**, and **idea_points** **add** in the combined score in [PRIORITIZATION.md](PRIORITIZATION.md). Staleness and phase tie-breakers there are unchanged.
+**How layers combine.** Initiative **tier points** (`priorities.json`), **project_points**, and **idea_points** **add** in the combined score in [PRIORITIZATION.md](PRIORITIZATION.md). Staleness and phase tie-breakers there are unchanged.
 
 If two ideas still tie after the score, use tie-breakers in [PRIORITIZATION.md](PRIORITIZATION.md). Cross-initiative ordering uses **combined score** and **Last initiative work** so lower-tier initiatives still get sessions.
 
@@ -257,7 +257,7 @@ If two ideas still tie after the score, use tie-breakers in [PRIORITIZATION.md](
   SYSTEM_OVERVIEW.md            ← How the system works (this file)
   PRIORITIZATION.md             ← Combined score and next-work selection
   IDEA_LIFECYCLE.md             ← Stage definitions, templates, and gate criteria
-  DASHBOARD.md                  ← Dashboard, initiative priority stack, approval queue
+  priorities.json               ← Registry: tier, lastWork, priorities, lifecycle, notes
   USER.md                       ← Context about you
 
   /rules/                       ← Cross-cutting operating rules (apply at every stage)
@@ -283,10 +283,10 @@ If two ideas still tie after the score, use tie-breakers in [PRIORITIZATION.md](
 
   /initiatives/
     [Initiative Name]/
-      ideas.md                  ← All ideas for this initiative (by project), Done, Dropped
+      project-history.md        ← Optional completed/dropped project tables
       sources/                  ← Immutable source documents (moved here from /raw)
       outputs/                  ← Finished deliverables produced by completed ideas (documents, reports, assets)
-      [Project Name]/           ← Matches the Project in ideas.md
+      projects/[Project Name]/  ← Matches project keys in priorities.json
         [Idea Name]/            ← Full lifecycle artifacts from first brief onward
           01_brief.md
           02_pressure_test.md
@@ -351,8 +351,8 @@ If two ideas still tie after the score, use tie-breakers in [PRIORITIZATION.md](
 
 ## Review Cadence
 
-- **Weekly (10 min):** Run the initiative health pass in [`skills/health-check/SKILL.md`](skills/health-check/SKILL.md) (or ask the agent to run the **health-check** skill). It uses `DASHBOARD.md` and each initiative’s `ideas.md`. Update statuses, priorities, and next actions when you find drift.
-- **Monthly:** In each initiative’s `ideas.md`, look at `On Hold` and `Backlog` ideas. Kill what's stale, revive what's ready. Run a wiki lint pass on at least one initiative.
+- **Weekly (10 min):** Run [`skills/health-check/SKILL.md`](skills/health-check/SKILL.md). It uses `priorities.json` and filesystem folders. Update lifecycle, priorities, and notes when you find drift.
+- **Monthly:** In `priorities.json`, review `On Hold` and `Backlog` ideas. Kill what's stale, revive what's ready. Run a wiki lint pass on at least one initiative.
 - **Quarterly:** Review `/archive/` for patterns. What worked? What stalled? Let that inform the next round.
 
 ---
@@ -362,7 +362,7 @@ If two ideas still tie after the score, use tie-breakers in [PRIORITIZATION.md](
 Every lifecycle stage ends with an Approval Gate. The Agent will not proceed without your explicit sign-off. The pattern is always:
 
 1. The Agent produces the stage output (and updates relevant wiki pages)
-2. The Agent sets the idea’s status to **`In Review`**, adds or updates a row in **Awaiting your approval** in `DASHBOARD.md` when helpful, and states: *"Stage complete. [Summary of what was produced and what changed in the wiki.] Ready to move to [Next Stage] when you approve."*
+2. The Agent sets `lifecycle` to **`In Review`** in `priorities.json` and states: *"Stage complete. [Summary of what was produced and what changed in the wiki.] Ready to move to [Next Stage] when you approve."* The Web UI approval queue updates automatically.
 3. You review and respond
 
 After you approve, update the idea status to the next lifecycle label (or keep the same label if you asked for revision). Clear or update the tracker row when the block is lifted.
@@ -393,6 +393,6 @@ The system version is tracked in [`VERSION`](VERSION) and documented in [`CHANGE
 
 ## Getting Started
 
-1. Open the initiative’s `ideas.md`, choose or create a **project** row, and add your first idea with status `Backlog`. Create `initiatives/[Initiative Name]/[Project Name]/[Idea Name]/` when you start lifecycle artifacts.
+1. Add the idea to `priorities.json` under the initiative and project with `lifecycle` `Backlog`. Create `initiatives/[Initiative Name]/projects/[Project Name]/[Idea Name]/` when you start lifecycle artifacts.
 2. Drop any relevant background documents into `/raw/`
 3. Tell The Agent: *"Ingest the files in /raw for the [Initiative] wiki"* - or go straight to *"Take [Idea] to the Brief stage"*

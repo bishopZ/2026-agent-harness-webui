@@ -4,33 +4,37 @@
 
 ### What this repo is
 
-This is a pure Markdown knowledge management system for tracking initiatives and ideas through a staged lifecycle. There is no source code, no build system, no package manager, and no runnable services. The "application" is the collection of Markdown documents and the AI assistant workflow described in `SYSTEM_OVERVIEW.md`.
+This is the **Agent Harness Web UI** demo harness: a local Express + React app plus a Markdown lifecycle workspace. Initiative and idea registry data lives in **`priorities.json`** at the repo root. Lifecycle artifacts live under `initiatives/[Name]/projects/[Project]/[Idea]/`.
 
 ### Key documents
 
-- `SYSTEM_OVERVIEW.md` defines the system, file organization, wiki operations, and naming conventions.
-- `IDEA_LIFECYCLE.md` defines every lifecycle stage, its inputs, outputs, wiki hooks, and approval gates.
-- `DASHBOARD.md` is the high-level dashboard and approval queue.
-- `USER.md` has context about the user and should be read at the start of every session.
-- `rules/` is the index of cross-cutting operating rules (evidence labeling, incremental execution, context engineering, decision records, anti-rationalization, red flags). Every stage in `IDEA_LIFECYCLE.md` names which rules to load. Read the cited rule when the stage calls for it.
-- `agents/` (the folder) contains specialist review profiles (`quality-reviewer`, `evaluator`, `risk-auditor`) invoked at specific lifecycle gates. Do not confuse this folder with *this* file (`AGENTS.md`), which is the agent-operating-instructions for the repo as a whole.
-- Each initiative lives under `initiatives/[Name]/` with its own `ideas.md`, project-named idea artifact folders, `sources/`, and `wiki/` directories.
+- `SYSTEM_OVERVIEW.md` — system design, folder layout, lifecycle statuses.
+- `IDEA_LIFECYCLE.md` — stages, gates, artifact templates.
+- `priorities.json` — **canonical registry** (tier, lastWork, project priority, idea lifecycle, notes). See [`docs/priorities-registry.md`](docs/priorities-registry.md).
+- `PRIORITIZATION.md` — how to pick the next idea using `priorities.json`.
+- `USER.md` — user context; read at session start.
+- `rules/` — cross-cutting rules cited by lifecycle stages.
+- `agents/` — specialist review profiles at gates (not this file).
+- Each initiative: `initiatives/[Name]/` with `projects/`, `sources/`, `outputs/`, and `wiki/`. **No** per-initiative `ideas.md`.
 
 ### Active initiatives
 
-The current initiative list and their priority stack live in `DASHBOARD.md`. Read that file for the authoritative list. Wiki domain layouts for each initiative type (business, personal brand, creative project) are in `SYSTEM_OVERVIEW.md` under **Wiki Domain Structure**.
+Read `priorities.json` → `initiatives` for the list, tier stack, and in-flight ideas. Ideas with `lifecycle: "In Review"` appear in the Web UI approval queue.
 
-### No dependencies or services to run
+### Running the app
 
-There are no dependencies to install, no servers to start, and no build or test commands to run. The only tooling required is Git and a text editor. Linting, testing, and building are not applicable to this repo.
+```bash
+npm install
+npm run dev    # http://127.0.0.1:PORT — set HARNESS_ROOT in .env
+npm test
+```
 
 ### How to work in this repo
 
-1. Read `USER.md` first for user context.
-2. Read `SYSTEM_OVERVIEW.md` for the full system design.
-3. Read `IDEA_LIFECYCLE.md` when advancing an idea through stages. Load the rule files it cites at each stage; load the agent profiles it cites at each gate.
-4. At Build, follow the Plan → Slice → Verify cycle in `rules/incremental-execution.md`. Every slice has an entry in `05_build/verification_log.md`.
-5. At any gate that involves user-facing output or sensitive data, run `agents/risk-auditor.md`. At end of Build and at Evaluation, run `agents/quality-reviewer.md` and `agents/evaluator.md`.
-6. Never delete wiki pages. Archive them to `wiki/.archive/` instead.
-7. Never modify files in `sources/`. They are immutable after ingestion.
-8. Always update `wiki/index.md` and `wiki/log.md` after any wiki operation.
+1. Read `USER.md`, then `SYSTEM_OVERVIEW.md` and `docs/priorities-registry.md`.
+2. For lifecycle work, read `IDEA_LIFECYCLE.md` and cited rules/agents.
+3. **Always update `priorities.json`** when adding ideas, changing lifecycle, or updating initiative `lastWork`.
+4. At Build, follow `rules/incremental-execution.md`; update `05_build/verification_log.md` per checkpoint.
+5. Never delete wiki pages — archive to `wiki/.archive/`.
+6. Never modify `sources/` after ingestion.
+7. Update `wiki/index.md` and `wiki/log.md` after wiki operations.

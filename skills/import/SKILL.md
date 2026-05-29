@@ -2,7 +2,7 @@
 name: import
 description: >-
   Import one or more project folders from an older version of this system into
-  a current initiative. Verifies folder structure, reconciles ideas.md,
+  a current initiative. Verifies folder structure, reconciles priorities.json,
   registers missing projects and ideas, repairs broken links, and updates the
   dashboard. Use when the user wants to bring in projects from a previous or
   external copy of the knowledge system.
@@ -24,7 +24,7 @@ Every imported project **must** end up matching this layout exactly. Use it as t
 
 ```
 initiatives/[Initiative Name]/
-  ideas.md
+  priorities.json
   sources/                        ← initiative-level (immutable after ingestion)
   outputs/                        ← initiative-level deliverables
   projects/
@@ -76,10 +76,10 @@ For each imported project folder, work through the checklist below. Do not stop 
 
 ### 2a - Folder name
 
-The folder name becomes the **Project** column value in `ideas.md`. Check that it:
+The folder name becomes the **Project** column value in `priorities.json`. Check that it:
 
 - Contains no slashes or other characters that break Markdown links.
-- Does not duplicate an existing active project name in the initiative's `ideas.md`.
+- Does not duplicate an existing active project name in the initiative's `priorities.json`.
 
 If the name would collide with an existing project, flag it and ask the user whether to rename the incoming folder or merge its ideas into the existing project.
 
@@ -103,11 +103,11 @@ Check each of the following. All three are **required** regardless of whether an
 - `outputs/` subfolder exists. If missing: **required repair** — create with `.gitkeep`. Do not defer this on the assumption that no deliverables exist yet; the folder must be present so future work has a home.
 - `00-how-to-use.md` exists. If missing: **required repair** — create it (see **`00-how-to-use.md`** section below).
 
-### 2d - Existing `ideas.md` entries
+### 2d - Existing `priorities.json` entries
 
-Read the initiative's `ideas.md` and check whether the project is already listed under **## Projects** and whether each idea already has a row under **## Project: [Name]**.
+Read the initiative's `priorities.json` and check whether the project is already listed under **## Projects** and whether each idea already has a row under **## Project: [Name]**.
 
-Record the result for each project and idea: **already registered**, **missing from `ideas.md`**, or **conflicting** (a row exists but points to a different folder path or has a mismatched name).
+Record the result for each project and idea: **already registered**, **missing from `priorities.json`**, or **conflicting** (a row exists but points to a different folder path or has a mismatched name).
 
 ---
 
@@ -118,7 +118,7 @@ Before writing any files, show the user a summary table. Use this format:
 ```
 Project: [Name]
   Folder:          initiatives/[Initiative]/projects/[Name]/
-  ideas.md status: not registered / already registered / conflict
+  priorities.json status: not registered / already registered / conflict
   Issues found:
     - [list each issue from Step 2]
   Ideas found: [count]
@@ -134,7 +134,7 @@ Then state what actions you plan to take. Wait for the user to confirm before wr
 
 Run in order for each project.
 
-### 4a - Register the project in `ideas.md` (if not already present)
+### 4a - Register the project in `priorities.json` (if not already present)
 
 1. Add a row to **## Projects**:
 
@@ -150,8 +150,8 @@ Run in order for each project.
 
 For each idea subfolder:
 
-- **If already in `ideas.md`:** verify the row's **Status**, **Priority**, and **Notes / next action** are plausible given the artifacts on disk. If the row says `Backlog` but `05_build/` exists, flag the drift - do not silently change the status. Report it and let the user decide.
-- **If not in `ideas.md`:** add a row. Use this logic to set **Status**:
+- **If already in `priorities.json`:** verify the row's **Status**, **Priority**, and **Notes / next action** are plausible given the artifacts on disk. If the row says `Backlog` but `05_build/` exists, flag the drift - do not silently change the status. Report it and let the user decide.
+- **If not in `priorities.json`:** add a row. Use this logic to set **Status**:
 
   | Highest artifact present | Default status to assign |
   |---|---|
@@ -173,7 +173,7 @@ For each idea subfolder:
 
 ### 4c - Handle Done and Dropped ideas
 
-If the imported `ideas.md` (from the old system) has rows in **## Done** or **## Dropped** sections, copy those rows into the current initiative's `ideas.md` **## Done** and **## Dropped** tables. Do not duplicate rows that already exist.
+If the imported `priorities.json` (from the old system) has rows in **## Done** or **## Dropped** sections, copy those rows into the current initiative's `priorities.json` **## Done** and **## Dropped** tables. Do not duplicate rows that already exist.
 
 ### 4d - Create missing folder structure
 
@@ -191,13 +191,13 @@ List every folder and file created in your completion summary.
 
 ### 4e - Fix broken links
 
-Search `ideas.md`, `DASHBOARD.md`, and the initiative's `wiki/index.md` for links that point at old paths (for example the old initiative name or an old project folder path). Update them to the correct current paths. List every link you changed in your summary.
+Search `priorities.json`, `priorities.json (initiative tier and lastWork)`, and the initiative's `wiki/index.md` for links that point at old paths (for example the old initiative name or an old project folder path). Update them to the correct current paths. List every link you changed in your summary.
 
 ---
 
 ## Step 5 - Update the dashboard
 
-1. **`DASHBOARD.md`** - update **Last initiative work** to today for the initiative you imported into.
+1. **`priorities.json (initiative tier and lastWork)`** - update **Last initiative work** to today for the initiative you imported into.
 2. If any imported idea has status `In Review` (it was awaiting approval in the old system), add a matching row to **Awaiting your approval** in the tracker. Ask the user to confirm these before adding them, because they may no longer apply.
 
 ---
@@ -221,7 +221,7 @@ Issues requiring user review: [list or "none"]
 Create this only when the project folder lacks one. Keep it short:
 
 - One line stating all idea work for this project lives under `projects/[Project Name]/[Idea Name]/`.
-- A link to the initiative's `ideas.md` at `../../ideas.md`.
+- A link to the initiative's `priorities.json` at `../../priorities.json`.
 - Links to `SYSTEM_OVERVIEW.md` and `IDEA_LIFECYCLE.md` at the repo root. The file lives at `initiatives/[Initiative]/projects/[Project Name]/00-how-to-use.md`, so the repo root is four levels up: `../../../../SYSTEM_OVERVIEW.md`.
 
 ---

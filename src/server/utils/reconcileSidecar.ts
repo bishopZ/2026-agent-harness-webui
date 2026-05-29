@@ -2,11 +2,12 @@ import fs from 'fs';
 import writeFileAtomic from 'write-file-atomic';
 import { prioritiesPath } from '../paths.js';
 import { discoverHarness, HarnessTree } from './discoverHarness.js';
+import { resolveIdeaFolderPath } from './ideaPaths.js';
+import { inferLifecycleFromArtifacts } from './inferLifecycleFromArtifacts.js';
 import {
   PrioritiesFile,
   InitiativeEntry,
   ProjectEntry,
-  IdeaEntry,
   emptySidecar,
   defaultInitiative,
   defaultProject,
@@ -43,7 +44,7 @@ async function writeSidecar(harnessRoot: string, data: PrioritiesFile): Promise<
  *
  * Mutates `sidecar` in place.
  */
-function mergeTrees(sidecar: PrioritiesFile, tree: HarnessTree): void {
+function mergeTrees(sidecar: PrioritiesFile, tree: HarnessTree, harnessRoot: string): void {
   const fsInitNames = new Set(Object.keys(tree));
 
   // Prune stale initiatives
@@ -83,10 +84,18 @@ function mergeTrees(sidecar: PrioritiesFile, tree: HarnessTree): void {
         }
       }
 
-      // Add missing ideas
+      // Add missing ideas (infer lifecycle from artifacts; never overwrite existing)
       for (const ideaName of Object.keys(projNode.ideas)) {
         if (!sidecarProj.ideas[ideaName]) {
-          sidecarProj.ideas[ideaName] = defaultIdea();
+          const ideaFolder = resolveIdeaFolderPath(
+            harnessRoot,
+            initName,
+            projName,
+            ideaName
+          );
+          const ideaEntry = defaultIdea();
+          ideaEntry.lifecycle = inferLifecycleFromArtifacts(ideaFolder);
+          sidecarProj.ideas[ideaName] = ideaEntry;
         }
       }
     }
@@ -109,7 +118,7 @@ export async function reconcile(harnessRoot: string): Promise<PrioritiesFile> {
   const tree = discoverHarness(harnessRoot);
   const sidecar = loadSidecar(harnessRoot);
 
-  mergeTrees(sidecar, tree);
+  mergeTrees(sidecar, tree, harnessRoot);
   sidecar.updated = todayISO();
 
   await writeSidecar(harnessRoot, sidecar);

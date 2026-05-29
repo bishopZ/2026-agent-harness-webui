@@ -19,3 +19,7 @@ Ran health check across all three initiatives (My Company, My Personal Life, My 
 ## [2026-04-14] lint | Final health check pass
 
 All references clean: no INITIATIVES_TRACKER, PRIORITIZATION_AND_NEXT_WORK, Bishop, BZ, Time2Magic, or Art of War strings remain anywhere in the repo. Removed dead link to deleted rules/no-dashes-in-copy.mdc from AGENTS.md. Approval queue empty. No active ideas across any initiative. All initiative folder structures intact with correct sources/, outputs/, projects/General/, and wiki/ directories.
+
+## [2026-05-29] update | Example Idea captured (General)
+
+Added **Example Idea** under project **General** via add-idea: `priorities.json` lifecycle **In Review**, brief at `projects/General/Example Idea/01_brief.md`. Registry migrated to priorities-only (removed `ideas.md` / `DASHBOARD.md`). Next stage after owner approval: Pressure Test (`02_pressure_test.md`).

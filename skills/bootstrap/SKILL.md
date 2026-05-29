@@ -3,7 +3,7 @@ name: bootstrap
 description: >-
   First-run setup for a new instance of this system. Interviews the user to
   populate USER.md, configures initiatives (replacing or keeping the defaults),
-  and confirms the DASHBOARD.md priority stack. Use when a user is setting up
+  and configures priorities.json tier stack. Use when a user is setting up
   the repo for the first time.
 ---
 
@@ -120,11 +120,11 @@ git mv "initiatives/[Old Name]" "initiatives/[New Name]"
 ```
 
 Then update the following in the new folder:
-- `ideas.md` - H1 title and any self-references
+- `priorities.json` - initiative entry (tier, lastWork, General project)
 - `wiki/index.md` - H1 title and self-references
 - `wiki/log.md` - H1 title
 
-Update `DASHBOARD.md` - the initiative row name and link path.
+Update `priorities.json` - initiative tier and `lastWork`.
 Update `AGENTS.md` - the initiative row if it appears there.
 Update `USER.md` (just written) - the initiative name in the Active Initiatives table.
 
@@ -142,11 +142,11 @@ Use the **add-initiative** skill for each additional one.
 
 ## Phase 4 - Set the priority stack
 
-Show the user the current **Initiatives** table from `DASHBOARD.md` with the names now configured. Ask:
+Show the user the initiative list from `priorities.json` with tiers configured. Ask:
 
 "Here is your initiative priority stack. The tier points control how the AI prioritizes work across initiatives - higher means more pull. Does this order look right, or do you want to adjust the tier values?"
 
-If they want changes, update the **Tier points** column in `DASHBOARD.md` accordingly. Keep tiers as distinct integers (for example 9, 6, 3) so the ordering is unambiguous.
+If they want changes, update `tier` values in `priorities.json`. Keep tiers as distinct integers (for example 9, 6, 3) so ordering is unambiguous.
 
 ---
 
