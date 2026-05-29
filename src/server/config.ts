@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { prioritiesPath } from './paths.js';
 
 // Resolve .env relative to the repo root (one level up from src/server)
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -9,7 +10,10 @@ const repoRoot = path.resolve(__dirname, '..', '..');
 dotenv.config({ path: path.join(repoRoot, '.env') });
 
 export interface Config {
+  /** Root of the harness tree (initiatives/, SYSTEM_OVERVIEW.md, …). */
   HARNESS_ROOT: string;
+  /** Absolute path to priorities.json — always `HARNESS_ROOT/priorities.json`. */
+  PRIORITIES_PATH: string;
   PORT: number;
 }
 
@@ -68,5 +72,9 @@ export function validateConfig(): Config {
     process.exit(1);
   }
 
-  return { HARNESS_ROOT: harnessRoot, PORT: port };
+  return {
+    HARNESS_ROOT: harnessRoot,
+    PRIORITIES_PATH: prioritiesPath(harnessRoot),
+    PORT: port,
+  };
 }

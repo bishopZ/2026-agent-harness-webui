@@ -4,18 +4,33 @@ import { fileURLToPath } from 'url';
 import { validateConfig } from './config.js';
 import { createFilesRouter } from './routes/files.js';
 import { createRenderRouter } from './routes/render.js';
+import { createDiscoverRouter } from './routes/discover.js';
+import { createApprovalQueueRouter } from './routes/approvalQueue.js';
+import { createPrioritiesRouter } from './routes/priorities.js';
+import { runLegacyImport } from './utils/legacyImport.js';
+import { reconcile } from './utils/reconcileSidecar.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..', '..');
 
 const config = validateConfig();
+
+// ── Startup: legacy import (Task 8) then initial reconcile (Task 6) ───────────
+// runLegacyImport is a no-op when priorities.json already exists.
+await runLegacyImport(config.HARNESS_ROOT);
+await reconcile(config.HARNESS_ROOT);
+
 const app = express();
 
 app.use(express.json());
 
 // ── API routes ────────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, harnessRoot: config.HARNESS_ROOT });
+  res.json({
+    ok: true,
+    harnessRoot: config.HARNESS_ROOT,
+    prioritiesPath: config.PRIORITIES_PATH,
+  });
 });
 
 // Task 2: file tree
@@ -24,8 +39,14 @@ app.use('/api/files', createFilesRouter(config.HARNESS_ROOT));
 // Task 3: markdown render
 app.use('/api/render', createRenderRouter(config.HARNESS_ROOT));
 
-// Tasks 5-10 routes added in subsequent build sessions:
-// /api/discover, /api/approval-queue, /api/priorities
+// Task 6: discover harness + reconcile sidecar
+app.use('/api/discover', createDiscoverRouter(config.HARNESS_ROOT));
+
+// Task 7: approval queue (In Review ideas)
+app.use('/api/approval-queue', createApprovalQueueRouter(config.HARNESS_ROOT));
+
+// Task 10: priority write-back (POST /api/priorities)
+app.use('/api/priorities', createPrioritiesRouter(config.HARNESS_ROOT));
 
 // ── Static / SPA serving ──────────────────────────────────────────────────────
 const isProd = process.env.NODE_ENV === 'production';
@@ -33,7 +54,8 @@ const isProd = process.env.NODE_ENV === 'production';
 if (isProd) {
   const clientDist = path.join(repoRoot, 'dist', 'client');
   app.use(express.static(clientDist));
-  app.get('*', (_req, res) => {
+  // Express 5 requires a named wildcard; use app.use as SPA fallback
+  app.use((_req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));
   });
 } else {
@@ -52,6 +74,7 @@ app.listen(config.PORT, '127.0.0.1', () => {
     `[agent-harness-webui] Server running at http://127.0.0.1:${config.PORT}`
   );
   console.log(`[agent-harness-webui] HARNESS_ROOT: ${config.HARNESS_ROOT}`);
+  console.log(`[agent-harness-webui] PRIORITIES_PATH: ${config.PRIORITIES_PATH}`);
   if (!isProd) {
     console.log('[agent-harness-webui] Mode: development (Vite HMR active)');
   }

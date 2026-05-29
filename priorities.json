@@ -1,0 +1,36 @@
+{
+  "version": 3,
+  "updated": "2026-05-29",
+  "initiatives": {
+    "My Company": {
+      "tier": 6,
+      "lastWork": "",
+      "projects": {
+        "General": {
+          "priority": "Medium",
+          "ideas": {}
+        }
+      }
+    },
+    "My Hobby": {
+      "tier": 4,
+      "lastWork": "",
+      "projects": {
+        "General": {
+          "priority": "Medium",
+          "ideas": {}
+        }
+      }
+    },
+    "My Personal Life": {
+      "tier": 7,
+      "lastWork": "",
+      "projects": {
+        "General": {
+          "priority": "Medium",
+          "ideas": {}
+        }
+      }
+    }
+  }
+}
