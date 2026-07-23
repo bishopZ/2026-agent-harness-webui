@@ -10,6 +10,7 @@ export interface QueueItem {
   idea: string;
   lifecycle: string;
   lastUpdated: string;
+  reviewDocumentPath?: string;
 }
 
 interface Props {
@@ -40,7 +41,18 @@ export function ApprovalQueue({ items }: Props) {
             <tr key={i} style={i % 2 === 0 ? rowEvenStyle : rowOddStyle}>
               <td style={tdStyle}>{item.initiative}</td>
               <td style={tdStyle}>{item.project}</td>
-              <td style={tdStyle}>{item.idea}</td>
+              <td style={tdStyle}>
+                {item.reviewDocumentPath ? (
+                  <a
+                    href={`/doc?path=${encodeURIComponent(item.reviewDocumentPath)}`}
+                    style={reviewLinkStyle}
+                  >
+                    {item.idea}
+                  </a>
+                ) : (
+                  item.idea
+                )}
+              </td>
               <td style={{ ...tdStyle, ...lifecycleStyle }}>{item.lifecycle}</td>
               <td style={{ ...tdStyle, ...monoStyle }}>{item.lastUpdated}</td>
             </tr>
@@ -91,6 +103,12 @@ const monoStyle: React.CSSProperties = {
   fontFamily: 'monospace',
   fontSize: '0.8rem',
   color: '#666',
+};
+
+const reviewLinkStyle: React.CSSProperties = {
+  color: '#2563eb',
+  textDecoration: 'underline',
+  cursor: 'pointer',
 };
 
 const emptyStyle: React.CSSProperties = {

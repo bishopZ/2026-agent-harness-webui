@@ -1,19 +1,11 @@
 # Project History
 
-_Auto-generated from ideas.md during legacy import on 2026-05-29._
-
-## Completed Projects
-
-| Project | Completed | Outcome |
-|---|---|---|
-| | | |
-
----
+_Updated 2026-07-23 to use a single **Closed Projects** list (projects are closed, not completed or dropped)._
 
 
-## Dropped Projects
+## Closed Projects
 
-| Project | Date | Reason |
-|---|---|---|
-| | | |
 
+| Project | Date | Notes |
+| ------- | ---- | ----- |
+|         |      |       |

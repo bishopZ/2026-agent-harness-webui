@@ -7,6 +7,7 @@ export interface QueueItem {
   idea: string;
   lifecycle: string;
   lastUpdated: string;
+  reviewDocumentPath?: string;
 }
 
 /**
@@ -29,12 +30,15 @@ export function createApprovalQueueRouter(harnessRoot: string): Router {
         for (const [projName, projEntry] of Object.entries(initEntry.projects)) {
           for (const [ideaName, ideaEntry] of Object.entries(projEntry.ideas)) {
             if (ideaEntry.lifecycle === 'In Review') {
+              const match = ideaEntry.notes?.match(/^reviewDocumentPath:\s+(.+)$/m);
+              const reviewDocumentPath = match ? match[1].trim() : undefined;
               queue.push({
                 initiative: initName,
                 project: projName,
                 idea: ideaName,
                 lifecycle: ideaEntry.lifecycle,
                 lastUpdated: ideaEntry.lastUpdated,
+                ...(reviewDocumentPath !== undefined && { reviewDocumentPath }),
               });
             }
           }

@@ -99,19 +99,6 @@ export function PriorityWorkspace() {
           </nav>
         </header>
 
-        {/* ── Approval Queue ───────────────────────────────────────────── */}
-        <section style={sectionStyle}>
-          <h2 style={h2Style}>
-            Awaiting Approval
-            {queueItems.length > 0 && (
-              <span style={badgeStyle}>{queueItems.length}</span>
-            )}
-          </h2>
-          <ApprovalQueue items={queueItems} />
-        </section>
-
-        <hr style={dividerStyle} />
-
         {/* ── Initiative List ──────────────────────────────────────────── */}
         <section style={sectionStyle}>
           <h2 style={h2Style}>Initiatives</h2>
@@ -122,6 +109,19 @@ export function PriorityWorkspace() {
               saving={saving}
             />
           )}
+        </section>
+
+        <hr style={dividerStyle} />
+
+        {/* ── Approval Queue ───────────────────────────────────────────── */}
+        <section style={sectionStyle}>
+          <h2 style={h2Style}>
+            Awaiting Approval
+            {queueItems.length > 0 && (
+              <span style={badgeStyle}>{queueItems.length}</span>
+            )}
+          </h2>
+          <ApprovalQueue items={queueItems} />
         </section>
       </div>
 

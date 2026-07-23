@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import fs from 'fs';
+import path from 'path';
 import { marked } from 'marked';
 import { guardOrReject } from './files.js';
 import { rewriteMarkdownLinks } from '../utils/linkRewrite.js';
@@ -20,7 +21,8 @@ export function createRenderRouter(harnessRoot: string): Router {
       return;
     }
 
-    const safePath = guardOrReject(harnessRoot, requestedPath, res);
+    const restoredPath = path.join('initiatives', requestedPath);
+    const safePath = guardOrReject(harnessRoot, restoredPath, res);
     if (!safePath) return; // guardOrReject already sent 403
 
     if (!fs.existsSync(safePath)) {

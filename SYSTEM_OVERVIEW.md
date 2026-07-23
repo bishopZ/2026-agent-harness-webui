@@ -222,7 +222,7 @@ At certain gates, The Agent adopts one of three specialist profiles from [`agent
 
 ### Project priority
 
-Each **active project** in `priorities.json` under an initiative lists `priority` and `purpose`. Each row has **Project**, **Purpose**, and **Priority**. When a project is completed or retired, its row moves out of this table and into **## Completed Projects** or **## Dropped Projects** at the bottom of the file. **Priority** ranks whole projects so every idea under that project inherits the same project layer in the combined score (see [PRIORITIZATION.md](PRIORITIZATION.md)).
+Each **active project** in `priorities.json` under an initiative lists `priority` and `purpose`. Each row has **Project**, **Purpose**, and **Priority**. When a project is no longer active, record it under **## Closed Projects** in that initiative’s `project-history.md` (projects are closed — not completed or dropped). **Priority** ranks whole projects so every idea under that project inherits the same project layer in the combined score (see [PRIORITIZATION.md](PRIORITIZATION.md)).
 
 You may set **Priority** using words or numbers (same meaning either way).
 

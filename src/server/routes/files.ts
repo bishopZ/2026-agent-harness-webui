@@ -4,7 +4,7 @@ import path from 'path';
 import { guardPath } from '../utils/pathGuard.js';
 
 /** Directory names skipped when walking the harness tree for sidebar listing. */
-const SKIP_DIRS = new Set(['node_modules']);
+const SKIP_DIRS = new Set(['node_modules', 'repo']);
 
 export function createFilesRouter(harnessRoot: string): Router {
   const router = Router();
@@ -16,7 +16,8 @@ export function createFilesRouter(harnessRoot: string): Router {
    */
   router.get('/', (_req, res) => {
     try {
-      const files = collectMdFiles(harnessRoot, harnessRoot);
+      const initiativesRoot = path.join(harnessRoot, 'initiatives');
+      const files = collectMdFiles(initiativesRoot, initiativesRoot);
       files.sort((a, b) => a.localeCompare(b));
       res.json(files);
     } catch (err) {

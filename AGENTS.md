@@ -38,3 +38,27 @@ npm test
 5. Never delete wiki pages — archive to `wiki/.archive/`.
 6. Never modify `sources/` after ingestion.
 7. Update `wiki/index.md` and `wiki/log.md` after wiki operations.
+
+---
+
+## reviewDocumentPath convention
+
+When an idea advances to `lifecycle: "In Review"`, the agent **must** include the following line in that idea's `notes` field in `priorities.json`:
+
+```
+reviewDocumentPath: path/relative/to/harness/root.md
+```
+
+**Example:**
+
+```json
+"notes": "Brief drafted 2026-06-12.\nreviewDocumentPath: initiatives/Time2Magic/projects/Agent Harness Web UI/New Idea/03_prd.md"
+```
+
+**Rules:**
+- The path is relative to `HARNESS_ROOT` (the same root used by all `/api/*` endpoints).
+- The line must begin exactly with `reviewDocumentPath:` followed by a space and the path — no leading spaces.
+- Only one `reviewDocumentPath` line per notes block. If you update the path, replace the old line.
+- When an idea leaves `In Review` (approved, dropped, or redirected), remove the `reviewDocumentPath` line from notes or leave it — it will be ignored when `lifecycle` is not `"In Review"`.
+
+**Why:** The Web UI approval queue reads this field to deep-link each queue row to the document that needs review, so the user can open it in one click.

@@ -244,6 +244,20 @@ export function parseIdeasMd(ideasPath: string): ParsedProject[] {
   return projects;
 }
 
+function extractSectionBody(lines: string[], sectionHeader: string): string[] {
+  const body: string[] = [];
+  let inSection = false;
+  for (const line of lines) {
+    if (line.trim() === sectionHeader) {
+      inSection = true;
+      continue;
+    }
+    if (inSection && /^##\s/.test(line.trim())) break;
+    if (inSection) body.push(line);
+  }
+  return body;
+}
+
 function writeProjectHistory(ideasPath: string, initiativeDir: string): void {
   let content: string;
   try {
@@ -258,22 +272,25 @@ function writeProjectHistory(ideasPath: string, initiativeDir: string): void {
     ``,
     `_Auto-generated from ideas.md during legacy import on ${todayISO()}._`,
     ``,
+    `## Closed Projects`,
+    ``,
   ];
 
-  const sections = ['## Completed Projects', '## Dropped Projects'];
-  for (const sectionHeader of sections) {
-    let inSection = false;
-    for (const line of lines) {
-      if (line.trim() === sectionHeader) {
-        inSection = true;
-        historyLines.push(line);
-        continue;
-      }
-      if (inSection && /^##\s/.test(line.trim()) && line.trim() !== sectionHeader) break;
-      if (inSection) historyLines.push(line);
+  // Prefer ## Closed Projects. Fall back to merging legacy Completed + Dropped bodies.
+  const closedBody = extractSectionBody(lines, '## Closed Projects');
+  const completedBody = extractSectionBody(lines, '## Completed Projects');
+  const droppedBody = extractSectionBody(lines, '## Dropped Projects');
+
+  if (closedBody.some((l) => l.trim())) {
+    historyLines.push(...closedBody);
+  } else {
+    historyLines.push(...completedBody);
+    if (completedBody.length && droppedBody.some((l) => l.trim())) {
+      historyLines.push('');
     }
-    historyLines.push('');
+    historyLines.push(...droppedBody);
   }
+  historyLines.push('');
 
   const historyPath = path.join(initiativeDir, 'project-history.md');
   try {

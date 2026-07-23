@@ -15,6 +15,45 @@ export function Sidebar() {
   const [searchParams] = useSearchParams();
   const currentPath = searchParams.get('path') ?? '';
 
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    if (typeof window === 'undefined' || window.innerWidth <= 768) return 260;
+    const stored = localStorage.getItem('harness-sidebar-width');
+    if (stored) {
+      const n = parseInt(stored, 10);
+      const maxAllowed = window.innerWidth * 0.6;
+      if (!isNaN(n) && n >= 180 && n <= maxAllowed) return n;
+    }
+    return 260;
+  });
+
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth > 768;
+
+  function handleDragStart(e: React.MouseEvent) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+
+    function onMouseMove(ev: MouseEvent) {
+      const newWidth = Math.min(
+        Math.max(startWidth + (ev.clientX - startX), 180),
+        window.innerWidth * 0.5
+      );
+      setSidebarWidth(newWidth);
+    }
+
+    function onMouseUp() {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      setSidebarWidth(prev => {
+        localStorage.setItem('harness-sidebar-width', String(prev));
+        return prev;
+      });
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
+
   useEffect(() => {
     fetch('/api/files')
       .then((r) => r.json())
@@ -33,7 +72,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside style={sidebarStyle} aria-label="File tree">
+    <aside style={{ ...sidebarStyle, width: `${sidebarWidth}px` }} aria-label="File tree">
       <div style={headerStyle}>
         <span style={{ fontWeight: 600, fontSize: '0.8rem', color: '#374151' }}>
           Harness Files
@@ -68,6 +107,13 @@ export function Sidebar() {
           </li>
         ))}
       </ul>
+      {isDesktop && (
+        <div
+          style={dragHandleStyle}
+          onMouseDown={handleDragStart}
+          aria-hidden="true"
+        />
+      )}
     </aside>
   );
 }
@@ -75,9 +121,7 @@ export function Sidebar() {
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
 const sidebarStyle: React.CSSProperties = {
-  width: '260px',
-  minWidth: '180px',
-  maxWidth: '320px',
+  width: '260px',          // default; overridden by inline style
   height: '100vh',
   overflowY: 'auto',
   borderRight: '1px solid #e5e7eb',
@@ -85,6 +129,7 @@ const sidebarStyle: React.CSSProperties = {
   flexShrink: 0,
   display: 'flex',
   flexDirection: 'column',
+  position: 'relative',   // needed for drag handle absolute positioning
 };
 
 const headerStyle: React.CSSProperties = {
@@ -98,6 +143,16 @@ const listStyle: React.CSSProperties = {
   padding: '0 0 1rem 0',
   overflowY: 'auto',
   flex: 1,
+};
+
+const dragHandleStyle: React.CSSProperties = {
+  position: 'absolute',
+  right: 0,
+  top: 0,
+  bottom: 0,
+  width: '5px',
+  cursor: 'col-resize',
+  zIndex: 10,
 };
 
 const fileButtonStyle: React.CSSProperties = {

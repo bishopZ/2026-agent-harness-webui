@@ -33,19 +33,44 @@ export function DocReader() {
   }
 
   return (
-    <div style={layoutStyle}>
-      <Sidebar />
-      {/* Capture link clicks so React Router handles /doc?path= without reload */}
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions */}
-      <div style={{ flex: 1, overflowY: 'auto' }} onClick={handleArticleClick}>
-        <MarkdownView filePath={currentPath} />
+    <div style={outerStyle}>
+      <header style={docHeaderStyle}>
+        <a href="/" style={homeLink}>← Home</a>
+      </header>
+      <div style={layoutStyle}>
+        <Sidebar />
+        {/* Capture link clicks so React Router handles /doc?path= without reload */}
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions */}
+        <div style={{ flex: 1, overflowY: 'auto' }} onClick={handleArticleClick}>
+          <MarkdownView filePath={currentPath} />
+        </div>
       </div>
     </div>
   );
 }
 
+const outerStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100vh',
+  overflow: 'hidden',
+};
+
+const docHeaderStyle: React.CSSProperties = {
+  padding: '0.4rem 0.75rem',
+  borderBottom: '1px solid #e5e7eb',
+  background: '#f9fafb',
+  flexShrink: 0,
+};
+
+const homeLink: React.CSSProperties = {
+  fontSize: '0.8rem',
+  color: '#2563eb',
+  textDecoration: 'none',
+};
+
 const layoutStyle: React.CSSProperties = {
   display: 'flex',
-  height: '100vh',
+  flex: 1,
   overflow: 'hidden',
 };

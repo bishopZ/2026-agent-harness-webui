@@ -21,7 +21,7 @@ For each idea: **drop-idea**, **complete-idea**, move to another project (update
 
 1. Delete `projects/[Project Name]/` or archive it.
 2. Remove project key from `priorities.json`.
-3. Append row to `initiatives/[Initiative]/project-history.md` (Completed or Dropped Projects section).
+3. Append row to `initiatives/[Initiative]/project-history.md` (**## Closed Projects** section).
 4. Update `lastWork` if substantive.
 
 Do not edit `ideas.md` or `DASHBOARD.md`.

@@ -149,6 +149,20 @@ See [docs/priorities-registry.md](docs/priorities-registry.md) for agent workflo
 
 ---
 
+## What this is not
+
+The Web UI is a small, local, browser-native shell over an opinionated Markdown harness repo. It is built to do one thing well: browse harness docs with working relative links and make lightweight priority edits backed by a JSON sidecar. These things are explicitly out of scope:
+
+| Out of scope | Why |
+|---|---|
+| Ambient/passive capture (OpenChronicle model) | Web UI is human-intentional — Bishop opens it, reads what he wants, edits what he decides. Always-on screen capture and session classifiers are a different product solving a different problem. |
+| Full personal OS / life OS (PAI model) | PAI maximizes coverage of life and work. The Web UI stays narrow: browse harness docs, tweak priorities. Not a second operating system. |
+| Vertical codegen product (10x model) | 10x runs a Claude tool loop to generate iOS SwiftUI projects from a macOS app. Entirely different job: codegen plus simulator feedback, not Markdown initiative management. |
+| MCP-heavy default install | Per the inference.sh harness essay warning on MCP volatility and opaque host-controlled context, the default install should not require a growing MCP graph for core browsing and priority edits. |
+| Nested rule systems or per-user prompt dumps | Adding a second harness inside the harness — nested lifecycle docs, duplicate rules, per-user prompt files — defeats the purpose of a single, legible harness. Keep additions lifecycle-cited or don't add them. |
+
+---
+
 ## License
 
 MIT
