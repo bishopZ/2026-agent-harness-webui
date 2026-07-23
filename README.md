@@ -1,9 +1,45 @@
 # Agent Harness Web UI
 
-Local Express + React app that gives you a browser shell for any [2026 Agent Harness](https://github.com/time2magic/2026-agent-harness) repo. Two features:
+![Version](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/bishopZ/2026-agent-harness-webui/main/docs/badges/version.json)
+
+**A lifecycle system for working with AI agents — combining [Karpathy's](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) persistent wiki architecture with [Osmani's](https://github.com/addyosmani/agent-skills) structured skill discipline — plus a local browser shell.**
+
+This repo is the [2026 Agent Harness](https://github.com/bishopZ/2026-agent-harness) Markdown system (v2.0.0 flat layout) with an additive Express + React UI:
 
 - **Doc reader** — browse and read any `.md` file in the harness as rendered HTML with working relative links. Read-only: no editing, no form controls injected into document content.
 - **Priority workspace** — view all initiatives, projects, and ideas with their tier, priority, and lifecycle labels. Edit the three priority fields (initiative tier, project priority, idea priority) inline; changes write to `priorities.json` atomically.
+
+---
+
+## Why
+
+AI editors default to the shortest path — without structure, every session starts over and prior context evaporates. This system applies Karpathy's wiki pattern (persistent structured memory) together with Osmani's skill discipline (staged workflows with explicit human verification gates). The Web UI adds a localhost browser for reading docs and editing priorities without leaving the same harness files.
+
+---
+
+## What you get
+
+| What | Count | Where |
+| --- | --- | --- |
+| Skills | 13 | `skills/` |
+| Rules | 6 | `rules/` |
+| Agent runbooks | 3 | `agents/` |
+| Lifecycle stages | 11 | `IDEA_LIFECYCLE.md` |
+| Registry | 1 | `priorities.json` (replaces `DASHBOARD.md` / `ideas.md`) |
+| Local app | Express + React | `src/`, `npm run dev` |
+
+_Counts current as of v2.0.0._
+
+---
+
+## What makes it different
+
+| Differentiator | What it means |
+| --- | --- |
+| Human-approved at every stage | 11 stages from brief to growth; nothing advances without your sign-off. |
+| Fair prioritization across everything | Combined score (`staleness × 2 + tier + project + idea`) so lower-tier initiatives are not starved. |
+| Everything is a Markdown file (+ one JSON registry) | Rules, stages, and decisions stay plain files; `priorities.json` is the only structured sidecar the UI edits. |
+| Local browser shell | Doc reader and priority forms on `127.0.0.1` — no hosted service. |
 
 ---
 
@@ -142,10 +178,11 @@ All file-read endpoints apply a path traversal guard. Requests that resolve outs
 ## Architecture
 
 - **Registry:** `priorities.json` (agents write lifecycle; Web UI writes tier/priority only).
-- **Artifacts:** `initiatives/[Name]/projects/[Project]/[Idea]/`.
+- **Artifacts:** `initiatives/[Name]/[Project]/[Idea]/` (flat — no `projects/` container).
+- **History:** `initiatives/[Name]/history/` for done/dropped ideas; `project-history.md` for Closed Projects.
 - **Reconcile:** every `GET /api/discover` syncs filesystem keys into `priorities.json` without overwriting existing lifecycle values.
 
-See [docs/priorities-registry.md](docs/priorities-registry.md) for agent workflows.
+See [WEBUI.md](WEBUI.md) and [docs/priorities-registry.md](docs/priorities-registry.md) for agent workflows. Deeper harness reading: [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md), [IDEA_LIFECYCLE.md](IDEA_LIFECYCLE.md), [PRIORITIZATION.md](PRIORITIZATION.md), [CHANGELOG.md](CHANGELOG.md).
 
 ---
 

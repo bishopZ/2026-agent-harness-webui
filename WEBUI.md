@@ -2,6 +2,8 @@
 
 Local Express + React app: **doc reader** (read-only Markdown) and **priority workspace** (edit tier and priority fields).
 
+This repo is the **2026 Agent Harness** lifecycle system (v2.0.0 flat layout) plus this local UI layer. Registry: [`priorities.json`](priorities.json). Agent guide: [`docs/priorities-registry.md`](docs/priorities-registry.md).
+
 ## Configuration
 
 | Variable | Purpose |
@@ -22,7 +24,13 @@ Copy `.env.example` to `.env` and set `HARNESS_ROOT` to this directory.
 
 Approval queue: derived from ideas with `lifecycle === "In Review"`.
 
-Agent guide: [docs/priorities-registry.md](docs/priorities-registry.md)
+## Folder layout
+
+Lifecycle artifacts use the **flat** project layout (same as main Agent Harness):
+
+`initiatives/[Initiative]/[Project]/[Idea]/`
+
+Each initiative also has `history/` (done/dropped idea logs), `project-history.md` (Closed Projects), `wiki/`, `sources/`, and `outputs/`. There is no `projects/` container directory and no per-initiative `ideas.md`.
 
 ## Run
 
@@ -40,4 +48,4 @@ Open `http://127.0.0.1:3747/`.
 npm run migrate-registry
 ```
 
-Then remove legacy `DASHBOARD.md` and `initiatives/*/ideas.md` if present.
+Then remove legacy `DASHBOARD.md` and `initiatives/*/ideas.md` if present. If folders still nest under `projects/`, move them to the flat layout first.

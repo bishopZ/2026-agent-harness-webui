@@ -1,29 +1,98 @@
 ---
 name: remove-initiative
 description: >-
-  Remove an initiative from the repo. Archives or deletes the folder and
-  removes its entry from priorities.json. Use when retiring a top-level area of focus.
+  Remove an initiative from the repo. If it has active ideas or projects,
+  offers options before proceeding. Removes the initiative folder and its
+  priorities.json entry. Use when the user wants to retire or delete a
+  top-level area of focus.
 ---
 
 # Remove Initiative
 
-Remove an initiative from `priorities.json` and `initiatives/[Name]/`.
+Use this skill when the user wants to **remove an initiative** entirely from the repo.
 
-## Step 1 — Report
+Treat this as the initiative-level closure/removal workflow.
 
-1. List active ideas in `priorities.json` for this initiative (`lifecycle` not Done/Dropped).
-2. List projects under the initiative.
-3. Note wiki depth beyond scaffold.
+Do not use Trello. Use only files in this repo.
 
-Stop and ask if active ideas exist (archive whole initiative vs clear projects first via **remove-project**).
+Follow `SYSTEM_OVERVIEW.md` (archive rules, naming conventions) and [`docs/priorities-registry.md`](../../docs/priorities-registry.md).
 
-## Step 2 — Execute
+## Inputs
 
-- **Archive:** `git mv initiatives/[Name]/` → `archive/[Name] - [YYYY-MM-DD]/` with README.
-- **Delete:** remove folder when empty/resolved.
+Resolve from the user and files:
 
-Remove the initiative key from `priorities.json`.
+- **Initiative name** - must match an existing folder under `initiatives/` and a key in `priorities.json` exactly. Ask once if ambiguous.
+
+Do not proceed if the name does not match an existing initiative.
+
+## Step 1 - Read and report
+
+Before making any changes:
+
+1. Open `priorities.json` for this initiative.
+2. Count all active ideas across all projects (`lifecycle` is not `Done`, `Dropped`, or blank).
+3. List all projects under the initiative in `priorities.json`.
+4. Note whether any ideas have `lifecycle: "In Review"` (Web UI approval queue).
+5. Note whether a `wiki/` folder exists with pages beyond the initial `index.md` and `log.md`.
+
+Report this summary to the user before touching anything.
+
+## Step 2 - Handle active ideas (stop and ask if any exist)
+
+If there are **no active ideas**, skip to Step 3.
+
+If there are **active ideas**, stop and ask the user to choose one of two options for the entire initiative:
+
+---
+
+**Option A - Archive everything**
+Move the entire `initiatives/[Initiative Name]/` folder to `archive/[Initiative Name] - [YYYY-MM-DD]/` using a git-aware move. The initiative's history, wiki, sources, outputs, and all project artifacts are preserved in the archive bundle. Add a `README.md` at the archive root noting the initiative name, removal date, and reason.
+
+**Option B - Handle projects individually first**
+Use the **remove-project** skill on each named project to resolve active ideas (archive, move, or delete) before removing the initiative shell. This is the right choice when some ideas should move to a different initiative rather than disappear.
+
+---
+
+Wait for the user's choice before proceeding.
+
+## Step 3 - Execute removal
+
+### If Option A (archive everything):
+
+1. Move `initiatives/[Initiative Name]/` to `archive/[Initiative Name] - [YYYY-MM-DD]/` using `git mv`.
+2. Create `archive/[Initiative Name] - [YYYY-MM-DD]/README.md`:
+   ```
+   # Archived Initiative: [Name]
+   **Removed:** [YYYY-MM-DD]
+   **Reason:** [user-supplied reason or "retired"]
+   **Contents:** Full initiative folder including wiki, sources, outputs, history, and all project artifacts.
+   ```
+
+### If Option B (projects already cleared):
+
+1. Confirm all projects are now empty or resolved.
+2. If the `initiatives/[Initiative Name]/` folder still contains anything other than empty scaffold files (`.gitkeep`, empty `wiki/`, empty `sources/`, empty `outputs/`, empty history templates), ask the user what to do with the remaining files.
+3. Remove the folder entirely (`git rm -r`).
+
+### In both cases:
+
+1. Remove the initiative key from `priorities.json`. Set root `updated` to today.
+2. If `AGENTS.md` lists this initiative, remove that row.
+3. Reminder to update `USER.md` if the initiative was listed there.
+
+Do **not** edit `ideas.md` or `DASHBOARD.md`.
+
+## Completion summary (return to user)
+
+- Initiative name removed.
+- Option taken (archived to path / folder deleted).
+- Confirmation the `priorities.json` entry was removed (and thus any `In Review` ideas left the Web UI queue).
+- Any other files touched.
+- Reminder to update `USER.md` if the initiative was listed there.
 
 ## Guardrails
 
-Do not delete wiki pages; archive per `SYSTEM_OVERVIEW.md`. Do not edit `DASHBOARD.md` or `ideas.md`.
+- Never silently delete an initiative with active ideas. Always present Option A or B and wait.
+- Never remove the last remaining initiative. At least one must exist.
+- Do not modify files inside `sources/` during the removal.
+- If the user asks to move ideas to another initiative, use **remove-project** (which handles moves) on each project first, then remove the empty initiative shell.

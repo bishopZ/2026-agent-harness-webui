@@ -32,13 +32,13 @@ For the chosen initiative root `initiatives/[Initiative Name]/`:
 
 1. **Staging:** List non-hidden files under repo `/raw/` (if any are meant for this initiative, the user usually says so; otherwise only ingest into an initiative when the user ties the file to that initiative).
 2. **Initiative-wide:** `initiatives/[Initiative]/sources/` (any file type the agent can read).
-3. **Project-scoped:** `initiatives/[Initiative]/projects/*/sources/`.
+3. **Project-scoped:** under each project folder: `initiatives/[Initiative]/[Project]/sources/` (exclude `wiki/`, `history/`, `sources/`, `outputs/` at the initiative level; project names are the direct child folder names of the initiative — flat layout, no `projects/` container — per `SYSTEM_OVERVIEW.md`).
 
 Use a shell discovery pass so ordering is objective, for example:
 
 ```bash
 # Newest first under initiative sources trees (adjust initiative path)
-find "/path/to/initiatives/[Initiative Name]" \( -path "*/sources/*" -o -path "*/projects/*/sources/*" \) -type f ! -name ".DS_Store" -print0 | xargs -0 ls -t
+find "/path/to/initiatives/[Initiative Name]" -path "*/sources/*" -type f ! -name ".DS_Store" -print0 | xargs -0 ls -t
 ```
 
 Also check `/raw/`:
@@ -55,7 +55,7 @@ If `find` is noisy, filter to extensions you can ingest (`.md`, `.txt`, `.csv`, 
 2. **Read `initiatives/[Initiative]/wiki/index.md` in full.** This is the architecture map. Decide which domains and pages the new material belongs in. Plan updates to the domain tables, cross-reference index, open questions, and footer "Last updated" line.
 3. **Open any wiki pages you will change.** Merge new facts into the right sections instead of duplicating whole pages.
 4. **Choose destination for the file after ingest.**
-   - From **`/raw/`**, after processing, **move** (not copy) into `initiatives/[Initiative]/sources/` **or** into `initiatives/[Initiative]/projects/[Project]/sources/` when the document clearly belongs to one project only.
+   - From **`/raw/`**, after processing, **move** (not copy) into `initiatives/[Initiative]/sources/` **or** into `initiatives/[Initiative]/[Project]/sources/` when the document clearly belongs to one project only.
    - Files already under an initiative or project `sources/` folder **stay put**. They are immutable. **Never edit files under any `sources/` directory.**
 
 ## Domain placement
@@ -88,6 +88,8 @@ If the initiative’s existing pages use a lighter header style (for example bol
 
 3. **Chat.** Short summary for the user: what was newest, what changed in the wiki, where files landed, and what is still open.
 
+This skill does **not** require editing `priorities.json` unless the ingest session also advanced lifecycle work (use the appropriate lifecycle skill then). Do **not** edit `ideas.md` or `DASHBOARD.md`.
+
 ## Contradictions and scope
 
 - If two sources at the same "freshness" disagree, do not hide it. Record both in the wiki or in Open Questions until resolved.
@@ -104,4 +106,5 @@ If the initiative’s existing pages use a lighter header style (for example bol
 ## References
 
 - [SYSTEM_OVERVIEW.md](../../SYSTEM_OVERVIEW.md). Four wiki operations, domain lists, `/raw/` and `sources/` rules, naming, log format.
-- [`skills/health-check/SKILL.md`](../health-check/SKILL.md). Optional alignment with tracker and initiative hygiene after large ingests (not a substitute for ingest bookkeeping).
+- [`docs/priorities-registry.md`](../../docs/priorities-registry.md). Registry guide (not required for pure ingest, but useful after large wiki updates that change initiative context).
+- [`skills/health-check/SKILL.md`](../health-check/SKILL.md). Optional alignment with registry and initiative hygiene after large ingests (not a substitute for ingest bookkeeping).

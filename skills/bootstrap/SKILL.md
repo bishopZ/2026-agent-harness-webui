@@ -120,13 +120,16 @@ git mv "initiatives/[Old Name]" "initiatives/[New Name]"
 ```
 
 Then update the following in the new folder:
-- `priorities.json` - initiative entry (tier, lastWork, General project)
 - `wiki/index.md` - H1 title and self-references
 - `wiki/log.md` - H1 title
+- `history/done-history.md` / `history/dropped-history.md` - H1 titles if present
+- `project-history.md` - leave structure; no initiative name required in the default template
 
-Update `priorities.json` - initiative tier and `lastWork`.
+Update `priorities.json` - rename the initiative key; keep `tier`, `lastWork`, and nested projects.
 Update `AGENTS.md` - the initiative row if it appears there.
 Update `USER.md` (just written) - the initiative name in the Active Initiatives table.
+
+Do **not** create or edit `ideas.md` or `DASHBOARD.md`.
 
 ### If they want to replace one or more defaults with entirely new initiatives:
 
@@ -148,6 +151,8 @@ Show the user the initiative list from `priorities.json` with tiers configured. 
 
 If they want changes, update `tier` values in `priorities.json`. Keep tiers as distinct integers (for example 9, 6, 3) so ordering is unambiguous.
 
+If legacy `DASHBOARD.md` / `ideas.md` still exist from an older copy, mention `npm run migrate-registry` once (see [`docs/priorities-registry.md`](../../docs/priorities-registry.md)), then delete those markdown registry files after a successful migrate.
+
 ---
 
 ## Phase 5 - Confirm and summarize
@@ -168,3 +173,4 @@ Do not create any projects or ideas during bootstrap. That is for the user to do
 - Do not write `USER.md` until the user confirms the draft.
 - Do not remove the last initiative. At least one must remain.
 - If the user skips a question, leave that field with a clear empty placeholder rather than making something up.
+- Do **not** edit `ideas.md` or `DASHBOARD.md` — registry is `priorities.json` only.

@@ -1,0 +1,35 @@
+name: Update version badge
+on:
+  push:
+    branches: [main]
+    paths:
+      - VERSION
+  workflow_dispatch:
+jobs:
+  badge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read version
+        id: version
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+      - name: Write badge JSON
+        run: |
+          mkdir -p docs/badges
+          cat > docs/badges/version.json << EOF
+          {
+            "schemaVersion": 1,
+            "label": "version",
+            "message": "v${{ steps.version.outputs.version }}",
+            "color": "blue"
+          }
+          EOF
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/badges/version.json
+          git diff --cached --quiet || git commit -m "chore: update version badge to v${{ steps.version.outputs.version }}"
+          git push

@@ -2,7 +2,7 @@
 
 This document defines every stage an idea moves through - from raw capture to active growth. Each stage includes a description, what the Agent needs to begin, what the Agent will produce, and the approval gate criteria before moving on.
 
-For system context, see `SYSTEM_OVERVIEW.md`. For initiative tier, project/idea priority, lifecycle, and approval queue, see `priorities.json` and [`docs/priorities-registry.md`](docs/priorities-registry.md). For combined score and picking the next idea, see `PRIORITIZATION.md`.
+For system context, see `SYSTEM_OVERVIEW.md`. For initiative tier, project/idea priority, `lifecycle`, and the approval queue, see [`priorities.json`](priorities.json) and [`docs/priorities-registry.md`](docs/priorities-registry.md). For combined score (tier + project + idea + staleness), tie-breakers, and picking the next idea, see `PRIORITIZATION.md`.
 
 **Rules and agent profiles.** Every stage in this document operates under the rules in `rules/`. The six rule files — evidence and verification, incremental execution, context engineering, decision records, anti-rationalization, and red flags — apply at every stage. At approval gates that involve depth or risk, The Agent also runs one or more of the specialist profiles in `agents/` (`quality-reviewer`, `evaluator`, `risk-auditor`). Each stage below cites which rules to load and which profiles, if any, to invoke.
 
@@ -22,17 +22,17 @@ At any point, an idea may move to `On Hold` or `Dropped`. While waiting on you a
 
 ## Deliverable types and lifecycle shortcuts
 
-**Not every idea is a software product.** The default stage map and the Stage 4 PRD template are **product-shaped** (user stories, functional requirements, launch metrics). That is correct when the idea is to ship or materially change a product. It is **incorrect** when the idea’s committed outcome is only a **document**, **research memo**, **process**, or **one-off asset**.
+**Not every idea is a software product.** The default stage map and the Stage 4 PRD template are **product-shaped** (user stories, functional requirements, launch metrics). That is correct when the idea is to ship or materially change a product. It is **incorrect** when the idea's committed outcome is only a **document**, **research memo**, **process**, or **one-off asset**.
 
-**How to avoid “wrong PRD” confusion**
+**How to avoid "wrong PRD" confusion**
 
-1. **Name the deliverable in the Brief** — In `01_brief.md`, state explicitly what ships when the idea completes: e.g. “single competitive research document in `outputs/` and wiki `market/` update,” not “inform the PRD” without naming the terminal artifact.
-2. **Tag the idea or front matter** — Use **notes** in `priorities.json` or optional YAML (e.g. `deliverable_class: research_document`) so Stage 4 is interpreted as **requirements for that work product**, not as an app specification. Parent **project** folder (e.g. Love Street) provides context; it does **not** redefine the idea’s deliverable.
+1. **Name the deliverable in the Brief** — In `01_brief.md`, state explicitly what ships when the idea completes: e.g. "single competitive research document in `outputs/` and wiki `market/` update," not "inform the PRD" without naming the terminal artifact.
+2. **Tag the idea** — Use the `notes` field for that idea in `priorities.json` or optional YAML front matter in the artifact (e.g. `deliverable_class: research_document`) so Stage 4 is interpreted as **requirements for that work product**, not as an app specification. Parent **project** folder (e.g. Love Street) provides context; it does **not** redefine the idea's deliverable.
 3. **Stage 4 still applies, but the content changes** — `03_prd.md` should specify **scope, sections, acceptance criteria, and verification** for the document (or other non-code deliverable), **not** product user stories unless the idea is actually to build the product.
-4. **Research-only or doc-only exit** — If the Brief defines the outcome as “published research” or “one report,” then after approved Research the work is usually: thin **Design** (outline, template, canonical location) → **Build** (write, cite, place in `outputs/` per `SYSTEM_OVERVIEW.md`) → **Evaluation** (stakeholder read, fact-check) → **Done** or a single **Launch** if the “release” is publication. **Marketing / Growth** may be waived with rationale in **Notes** when they do not apply.
-5. **When full product stages are required** — Use the full map through Launch (and beyond) when the idea commits to shipping or operating something in market (app, recurring service, public campaign with ongoing metrics). When in doubt, the Brief’s **success criteria** decide: if they only mention a document or a wiki update, do not generate an app PRD.
+4. **Research-only or doc-only exit** — If the Brief defines the outcome as "published research" or "one report," then after approved Research the work is usually: thin **Design** (outline, template, canonical location) → **Build** (write, cite, place in `outputs/` per `SYSTEM_OVERVIEW.md`) → **Evaluation** (stakeholder read, fact-check) → **Done** or a single **Launch** if the "release" is publication. **Marketing / Growth** may be waived with rationale in `notes` when they do not apply.
+5. **When full product stages are required** — Use the full map through Launch (and beyond) when the idea commits to shipping or operating something in market (app, recurring service, public campaign with ongoing metrics). When in doubt, the Brief's **success criteria** decide: if they only mention a document or a wiki update, do not generate an app PRD.
 
-**Why agents default to app PRDs:** The Research stage’s decision framework says “Build → proceed to PRD.” That “Build” means **continue the initiative pipeline**, not “write a product requirements document for the parent project.” Combined with a **project** name that is a product (Love Street), it is easy to mis-route Stage 4 into **parent-product** scope. The Brief + deliverable tag breaks that ambiguity.
+**Why agents default to app PRDs:** The Research stage's decision framework says "Build → proceed to PRD." That "Build" means **continue the initiative pipeline**, not "write a product requirements document for the parent project." Combined with a **project** name that is a product (Love Street), it is easy to mis-route Stage 4 into **parent-product** scope. The Brief + deliverable tag breaks that ambiguity.
 
 ---
 
@@ -44,14 +44,12 @@ When an idea is tied to something you sell or ship, also load and update `**offe
 
 **Creative projects (e.g. a novel)** use `identity/`, `characters/`, `world/`, `plot/`, `craft/`, and `publishing/` (see `SYSTEM_OVERVIEW.md`). Map lifecycle hooks to those folders like this:
 
-
 | This document names                            | Typical home in a creative wiki                                                                                  |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `customers/`, reader or audience discovery     | `publishing/` (target reader, discovery notes); sometimes `characters/` when the focus is who inhabits the story |
 | `market/`, landscape, competitors              | `publishing/` (comp titles, positioning); `craft/` (influences, analogous works)                                 |
 | `strategy/`                                    | `publishing/` (query, marketing, long-term publishing bets); `plot/` (structure and story-priority decisions)    |
 | `operations/` (tools, process, how build runs) | `craft/` (writing process, tools); `publishing/` for submission or production workflow                           |
-
 
 During **Marketing**, wiki updates emphasize initiative-wide messaging, channel, and competitive notes derived from the pack. During **Growth**, "all domains" means every folder for that initiative type (for a novel, all six creative domains).
 
@@ -59,17 +57,17 @@ During **Marketing**, wiki updates emphasize initiative-wide messaging, channel,
 
 ## Stage 0 - Idea Capture (Backlog)
 
-**What it is:** A raw idea has been named and added to the initiative’s idea list. No work has been done yet.
+**What it is:** A raw idea has been named and added to the initiative's idea list. No work has been done yet.
 
 **To enter this stage:**
 
 - Give the idea a name
 - Optionally write one or two sentences describing it
-- Add it to `priorities.json` under the correct initiative and **project** with `lifecycle` `Backlog`
+- Add it to `priorities.json` under the correct initiative and **project**, with `lifecycle` `Backlog`
 
 **What The Agent does:** Nothing yet. This stage is owned entirely by you.
 
-**Artifact:** An entry in `priorities.json` for that initiative and project.
+**Artifact:** An entry for that idea in `priorities.json`.
 
 **Rules to load:** None — this stage is pre-work.
 
@@ -122,7 +120,7 @@ During **Marketing**, wiki updates emphasize initiative-wide messaging, channel,
 - **Assumption audit** - every load-bearing assumption in the Brief, labeled `DATA` / `INFERENCE` / `ASSUMPTION` / `SPECULATION` per `rules/evidence-and-verification.md`
 - **Risks, in order** - what is most likely to kill this, what would cost the most to get wrong, and what is merely uncomfortable
 - **Next experiments** - the smallest, fastest experiments that would move an `ASSUMPTION` to `DATA` — ideally weeks, not months
-- **Waiver note (if applicable)** - if Pressure Test is being waived for an idea, the rationale lives here or in that idea's Notes in `ideas.md` per `SYSTEM_OVERVIEW.md`
+- **Waiver note (if applicable)** - if Pressure Test is being waived for an idea, the rationale lives here or in that idea's `notes` in `priorities.json` per `SYSTEM_OVERVIEW.md`
 
 **Rules to load:** `rules/evidence-and-verification.md`, `rules/anti-rationalization.md` (this stage is the first formal anti-rationalization pass), `rules/red-flags.md`.
 
@@ -190,13 +188,11 @@ The Agent will help identify 10–20 specific people to reach out to. Not target
 
 The Agent will draft personalized messages under 100 words using one of three frames:
 
-
 | Frame                                                                                                          | Best for                                     |
-| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| -------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | **Research Frame** - "I'm studying [problem]. Would you share your experience?"                                | People who've publicly described the problem |
 | **Shared Struggle Frame** - "Your post hit close to home. I've experienced the same thing. Can we swap notes?" | People in similar situations to you          |
 | **Value-First Frame** - Lead with something useful, then ask for time                                          | Busy people, influencers                     |
-
 
 Rules for every message: specific to the person, under 100 words, frames as research not sales, makes it easy to say yes or no.
 
@@ -248,14 +244,12 @@ After 5 conversations, check for emerging patterns. After 10, The Agent will run
 
 **The decision framework:**
 
-
 | What you found                       | Signal    | Action                                        |
-| ------------------------------------ | --------- | --------------------------------------------- |
+| ------------------------------------- | --------- | ---------------------------------------------- |
 | Problem is real + people will pay    | Strong    | **Build** - proceed to PRD                    |
 | People will pay + problem is unclear | Dangerous | Find the real problem first                   |
 | Problem is real + people won't pay   | Hobby     | Find different customers or a different model |
 | Neither                              | Clear     | Stop - find a different problem               |
-
 
 **What The Agent will produce (`02b_customer_discovery.md`):**
 A synthesis document with all findings, key quotes, the decision framework outcome, and recommended next steps. This also feeds into the wiki's `customers/` domain.
@@ -340,6 +334,8 @@ A synthesis document with all findings, key quotes, the decision framework outco
 
 - An approved `04_design.md` exists
 
+**Project `repo/` (software):** When the idea's parent **project** includes a `repo/` git submodule (see `SYSTEM_OVERVIEW.md`), **all product source code and application changes** for that build belong **inside `repo/`**. The harness folders under `[Project Name]/[Idea Name]/` hold lifecycle artifacts (`05_build_plan.md`, `05_build/`, `outputs/` for documents, etc.); they are not a substitute for the application tree. Plan slices with paths under `repo/`, run tests and commits from that working tree, and push branches to the submodule's remote. If there is no `repo/` for the project, implementation location follows the Design and your repo layout—but never treat the harness root as a dumping ground for unrelated product code when a project submodule is the agreed home.
+
 ### Sub-phase 6a - Build Plan
 
 Before any construction begins, The Agent decomposes the Design into a **Build Plan**: an ordered list of thin vertical slices with explicit acceptance criteria, verification steps, and dependencies.
@@ -349,7 +345,7 @@ Before any construction begins, The Agent decomposes the Design into a **Build P
 - **Overview** - a paragraph restating what will be built, from the PRD and Design
 - **Architecture decisions carried forward** - a short index of ADRs from Design (or new ones emerging now)
 - **Task list, ordered** - each slice follows the task structure below
-- **Checkpoints** - explicit gates after every 2–3 slices where the system must be verified end-to-end
+- **Checkpoints** - explicit gates after every 2–3 slices where the system must be verified end-to-end. Each checkpoint in the markdown **must** include: **Hard stop for agents** (which task must not start without an explicit user continuation or owner approval) and a **Closure checklist** (`verification_log.md`, that idea's entry in `priorities.json`, `wiki/log.md` if wiki changed). Optional: **Owner gate** when the next slice touches payments, deploy, or external commitments.
 - **Risks and mitigations** - the risks from Design, refreshed, with mitigations mapped to specific slices
 - **Open questions** - unknowns that must be resolved before or during Build, each with a proposed path to an answer
 - **Parallelization notes** - which slices can safely be done in parallel, which must be sequential, which need coordination (e.g. a shared contract defined first)
@@ -377,6 +373,24 @@ Before any construction begins, The Agent decomposes the Design into a **Build P
 **Estimated scope:** S (1–2 files) | M (3–5 files) | L (break it down)
 ```
 
+**Checkpoint structure (repeat after the last Task that belongs in each checkpoint group):**
+
+```markdown
+## Checkpoint X — [Short milestone name]
+
+**Scope:** Tasks _through N_ finished; [one line on what is true now].
+
+**Hard stop for agents:** End here. Do **not** start Task _N+1_ in this session unless the user explicitly continues past Checkpoint X [or: **and** owner approved _specific risk_, e.g. live payments].
+
+**Closure checklist:**
+
+- [ ] `05_build/verification_log.md` — tasks through Task N verified this session.
+- [ ] `priorities.json` — this idea's entry updated through Checkpoint X (`lifecycle`, `lastUpdated`, `notes` with **Next:** Task N+1).
+- [ ] `wiki/log.md` — updated if applicable.
+
+**Human / next session:** [Optional: what you'll do next or owner-only gate text.]
+```
+
 **Sizing.** Each slice should be S or M. L and XL slices are broken down before the Plan is approved. A slice with "and" in its title is two slices.
 
 **Rules to load (6a):** `rules/incremental-execution.md`, `rules/evidence-and-verification.md`, `rules/context-engineering.md`, `rules/anti-rationalization.md`.
@@ -388,16 +402,18 @@ Before any construction begins, The Agent decomposes the Design into a **Build P
 With the Build Plan approved, The Agent executes one slice at a time following the cycle in `rules/incremental-execution.md`:
 
 1. **Plan the slice** — re-read the slice's acceptance criteria and the relevant prior artifacts
-2. **Produce** — the minimum that is obviously correct
+2. **Produce** — the minimum that is obviously correct (for software with a project `repo/`, edit files **inside** `initiatives/.../[Project]/repo/`, not the harness root)
 3. **Verify** — run the acceptance checks; record the evidence
-4. **Save** — atomic commit (software) or named save-point (non-software) with a descriptive message
+4. **Save** — atomic commit (software) or named save-point (non-software) with a descriptive message; for code in `repo/`, commit **in the submodule** (its own Git state), not only in the parent harness repo
 5. **Log** — append an entry to `05_build/verification_log.md`
 6. **Record decisions** — any architectural or direction-setting choice made during the slice becomes a Decision Record in `05_build/decisions.md`
 7. **Next slice** — carry forward, don't restart
 
 Between slices the system must hold together: build succeeds, existing verifications still pass, the narrative still coheres, the pack is still launchable. This is enforced by `rules/incremental-execution.md` Rule 2.
 
-At each checkpoint from the Build Plan, The Agent stops, summarizes, and waits for your go-ahead before moving on. Checkpoints are mini-gates — you can redirect, pause, or adjust scope at any of them.
+At each checkpoint from the Build Plan, The Agent **stops the implementation chain**: it summarizes what shipped, completes the checkpoint **Closure checklist** (so `priorities.json` and the wiki stay aligned — see `SYSTEM_OVERVIEW.md` **Build checkpoint discipline**), and **ends the turn** without starting the next task. Checkpoints are mini-gates — you can redirect, pause, or adjust scope. Treat "Proceed to …" text in older plans as narrative unless the plan also defines a **Hard stop**; when both conflict, **Hard stop** wins.
+
+**Default:** one checkpoint boundary per agent session. Only chain past a checkpoint when you explicitly instruct The Agent to continue.
 
 **Rules to load (6b):** `rules/incremental-execution.md`, `rules/evidence-and-verification.md`, `rules/decision-records.md`, `rules/red-flags.md`, `rules/anti-rationalization.md`.
 
@@ -430,7 +446,7 @@ The results are written into `05_build/README.md` and any Critical / High findin
   outputs/                      ← finished deliverables (documents, reports, code artifacts, assets)
 ```
 
-Working files and drafts stay in `05_build/`. When the build produces a finished deliverable (a document, report, asset, or other tangible output), place it in the idea's `outputs/` folder. Link to output files from the Done row in `ideas.md` when the idea completes.
+When the project has `repo/`, the **implemented code** for slices lives in that submodule; `05_build/slices/` still records what changed, acceptance, and evidence. Working files and drafts stay in `05_build/`. When the build produces a finished deliverable (a document, report, asset, or other tangible output), place it in the idea's `outputs/` folder. Link to output files from `history/done-history.md` when the idea completes.
 
 **Wiki update:** Key technical decisions, architectural choices, and lessons from the build are captured in the `operations/` domain (business / personal brand) or `craft/` (creative). ADRs that rise above per-idea scope are also promoted into `wiki/strategy/` or the domain most relevant to the decision.
 
@@ -501,7 +517,7 @@ Working files and drafts stay in `05_build/`. When the build produces a finished
 
 **Approval gate:** Review the launch plan. Is the minimum messaging sufficient for go-live? Is the rollout sound and properly staged where staged rollout is available? Are the rollback trigger conditions specific and owned? Does the monitoring plan cover the known failure modes from Evaluation? Approve to execute the launch, or revise the plan.
 
-**To advance:** After go-live matches the plan (or you note exceptions in that initiative’s `ideas.md`), tell The Agent to take the idea to **Marketing** for the post-launch marketing pack.
+**To advance:** After go-live matches the plan (or you note exceptions in that idea's `notes` in `priorities.json`), tell The Agent to take the idea to **Marketing** for the post-launch marketing pack.
 
 ---
 
@@ -511,7 +527,7 @@ Working files and drafts stay in `05_build/`. When the build produces a finished
 
 **To enter this stage:**
 
-- `07_launch_plan.md` is approved and go-live is complete as defined in that plan (or you have recorded in **Notes** that you want the pack drafted ahead of go-live)
+- `07_launch_plan.md` is approved and go-live is complete as defined in that plan (or you have recorded in `notes` that you want the pack drafted ahead of go-live)
 
 **What The Agent will produce (`08_marketing_pack.md`):**
 
@@ -541,11 +557,11 @@ Working files and drafts stay in `05_build/`. When the build produces a finished
 
 ## Stage 10 - Growth
 
-**What it is:** Ongoing **product and user-base** work after the marketing pack is approved: metrics, feedback, feature and improvement iteration, and scaling. This stage is ongoing and cyclical. The first “big push” materials live in `08_marketing_pack.md`; Growth focuses on learning, product levers, and durable growth—not on drafting the initial post-launch campaign from scratch.
+**What it is:** Ongoing **product and user-base** work after the marketing pack is approved: metrics, feedback, feature and improvement iteration, and scaling. This stage is ongoing and cyclical. The first "big push" materials live in `08_marketing_pack.md`; Growth focuses on learning, product levers, and durable growth—not on drafting the initial post-launch campaign from scratch.
 
 **To enter this stage:**
 
-- `08_marketing_pack.md` is approved (or you explicitly waive Marketing per **Notes** and record the rationale)
+- `08_marketing_pack.md` is approved (or you explicitly waive Marketing per `notes` and record the rationale)
 
 **What The Agent will produce (maintained in `09_growth_log.md`):**
 
@@ -565,10 +581,10 @@ Working files and drafts stay in `05_build/`. When the build produces a finished
 
 **Agent profiles to run:** `evaluator` for every experiment's verification coverage; `risk-auditor` when new risk surfaces (new integration, new market, new data type).
 
-**Wiki domains to load and update:** All domains may be updated during Growth. User feedback updates `customers/`. Competitive responses update `market/`. Lessons learned update `strategy/` and `operations/`. Validated or invalidated assumptions update the pages where those assumptions were recorded. New ideas generated should be added to that initiative’s `ideas.md` as `Backlog` entries under the right **project**.
+**Wiki domains to load and update:** All domains may be updated during Growth. User feedback updates `customers/`. Competitive responses update `market/`. Lessons learned update `strategy/` and `operations/`. Validated or invalidated assumptions update the pages where those assumptions were recorded. New ideas generated should be added to `priorities.json` as `Backlog` entries under the right **project** for that initiative.
 
 **How Growth works:**
-Growth is the only stage that loops. Each growth experiment can be treated as a mini-lifecycle of its own (brief → build slice → evaluate). Smaller experiments may use that short path on purpose. Larger bets should re-enter at Brief or Research so the full pipeline stays honest. Significant new directions may become entirely new rows in `ideas.md`.
+Growth is the only stage that loops. Each growth experiment can be treated as a mini-lifecycle of its own (brief → build slice → evaluate). Smaller experiments may use that short path on purpose. Larger bets should re-enter at Brief or Research so the full pipeline stays honest. Significant new directions may become entirely new idea entries in `priorities.json`.
 
 **This stage has no terminal approval gate.** It continues until the initiative is retired, the idea is folded into something larger, or is deliberately wound down.
 
@@ -578,18 +594,17 @@ Growth is the only stage that loops. Each growth experiment can be treated as a 
 
 An idea can move to either of these states from any stage.
 
-**On Hold:** The idea is paused. Add a note in that initiative’s `ideas.md` with the reason and date. Resume at any time by telling The Agent to pick it back up.
+**On Hold:** The idea is paused. Set `lifecycle` to `On Hold` for that idea in `priorities.json` with the reason and date in `notes`. Resume at any time by telling The Agent to pick it back up.
 
-**Dropped:** The idea is killed. Move it to the **Dropped** section in `ideas.md` with the reason. Dropped ideas stay on file for reference. They may be relevant later or inform future decisions.
+**Dropped:** The idea is killed. Set `lifecycle` to `Dropped` in `priorities.json` and record the reason and rationale in that initiative's `history/dropped-history.md` (see the **drop-idea** skill). Dropped ideas stay on file for reference. They may be relevant later or inform future decisions.
 
 ---
 
 ## Stage Summary Table
 
-
 | Stage             | Status Label   | Key Artifact                                                                  | Rules most relevant                                                                    | Specialist profiles at gate                              | Wiki Domains                                                                          | Approval Question                                              |
 | ----------------- | -------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 0 – Capture       | `Backlog`      | Entry in `priorities.json`                                                | —                                                                                      | —                                                        | —                                                                                     | N/A - owned by you                                             |
+| 0 – Capture       | `Backlog`      | Entry in `priorities.json`                                                     | —                                                                                      | —                                                        | —                                                                                     | N/A - owned by you                                             |
 | 1 – Brief         | `Brief`        | `01_brief.md`                                                                 | context-engineering, evidence                                                          | —                                                        | identity, customers / audience                                                        | Is this worth pressure-testing (or waived)?                    |
 | 2 – Pressure Test | `PressureTest` | `02_pressure_test.md`                                                         | evidence, anti-rationalization, red-flags                                              | —                                                        | market, customers / audience, offerings, identity (+ `[USER.md](USER.md)`)            | Are we honest about risks and next experiments?                |
 | 3 – Research      | `Research`     | `02_market_research.md` + `02b_customer_discovery.md`                         | evidence, context-engineering                                                          | evaluator (on synthesis if called)                       | market, customers / audience                                                          | Is the opportunity real + do people confirm it?                |
@@ -603,10 +618,9 @@ An idea can move to either of these states from any stage.
 | 9 – Marketing     | `Marketing`    | `08_marketing_pack.md`                                                        | evidence, context-engineering                                                          | quality-reviewer, risk-auditor (conditional)             | identity, customers / audience, market, strategy (+ publishing for creative)          | Ready to execute the checklist yourself?                       |
 | 10 – Growth       | `Growth`       | `09_growth_log.md`                                                            | evidence, incremental-execution, decision-records, red-flags                           | evaluator, risk-auditor (when new risk appears)          | all domains (see [Wiki domains by initiative type](#wiki-domains-by-initiative-type)) | Ongoing - no terminal gate                                     |
 
-
 `In Review` is not a numbered stage. It marks a **waiting state** between stages when deliverables are ready and you have not approved the next step. **Elaboration** for thin ideas uses the same approval pattern and may occur before Stage 1.
 
-Build sub-phases (6a, 6b, 6c) all share the same **`Build`** status label in `ideas.md`. Use **Notes** on the idea row to record which sub-phase is in progress.
+Build sub-phases (6a, 6b, 6c) all share the same **`Build`** value for `lifecycle` in `priorities.json`. Use `notes` on that idea's entry to record which sub-phase is in progress.
 
 Personal brand initiatives use `audience/` instead of `customers/`. Creative initiatives map columns to their wiki as described in that section.
 
@@ -616,7 +630,7 @@ Personal brand initiatives use `audience/` instead of `customers/`. Creative ini
 
 Use these at checkpoints when stakes are high or analysis feels too comfortable.
 
-**Adversarial prompting.** After a draft, ask for the strongest case **against** the plan. Example: “What would a skeptical investor say is wrong? What are we missing or overweighting?” The Pressure Test stage bakes this in; use ad-hoc adversarial prompting mid-Build or mid-Marketing when things feel too smooth.
+**Adversarial prompting.** After a draft, ask for the strongest case **against** the plan. Example: "What would a skeptical investor say is wrong? What are we missing or overweighting?" The Pressure Test stage bakes this in; use ad-hoc adversarial prompting mid-Build or mid-Marketing when things feel too smooth.
 
 **Persona shifting.** Ask for the same artifact through two or three lenses (for example bootstrap founder, experienced buyer, well-funded competitor). The specialist agent profiles in `agents/` are a structured form of this.
 

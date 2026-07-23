@@ -2,6 +2,8 @@
 
 `priorities.json` at the harness root is the **single source of truth** for initiative tier, project priority, and idea lifecycle metadata. The Web UI reads and writes **tier** and **priority** fields only; agents maintain **lifecycle**, **lastWork**, **lastUpdated**, and **notes**.
 
+Artifact folders use the **flat** layout: `initiatives/[Initiative]/[Project]/[Idea]/` (no `projects/` container). See [`SYSTEM_OVERVIEW.md`](../SYSTEM_OVERVIEW.md).
+
 ## Schema
 
 ```json
@@ -31,6 +33,8 @@
 }
 ```
 
+The JSON key `projects` is the registry nest — it does **not** mean a `projects/` folder on disk.
+
 ## Lifecycle values
 
 `Backlog`, `Brief`, `PressureTest`, `Research`, `PRD`, `Design`, `Build`, `Evaluation`, `Launch`, `Marketing`, `Growth`, `In Review`, `On Hold`, `Dropped`, `Done`
@@ -39,7 +43,7 @@
 
 ## Add idea (with brief)
 
-1. Create `initiatives/[Initiative]/projects/[Project]/[Idea]/01_brief.md` (and folders as needed).
+1. Create `initiatives/[Initiative]/[Project]/[Idea]/01_brief.md` (and folders as needed).
 2. In `priorities.json`, under the initiative → project → `ideas`, add or update:
 
 ```json
@@ -47,7 +51,7 @@
   "priority": "Medium",
   "lifecycle": "In Review",
   "lastUpdated": "2026-05-29",
-  "notes": "Brief drafted — awaiting approval → Pressure Test (`02_pressure_test.md`)."
+  "notes": "Brief drafted — awaiting approval → Pressure Test (`02_pressure_test.md`).\nreviewDocumentPath: initiatives/Initiative/Project/Idea/01_brief.md"
 }
 ```
 
@@ -59,13 +63,14 @@ Do **not** create `ideas.md` or `DASHBOARD.md` rows.
 ## Approve idea
 
 1. Update the approved artifact (`**Status:** Approved`, approval stamp).
-2. In `priorities.json`, set `lifecycle` to the next stage (e.g. `PressureTest` after Brief approval). Remove `In Review`.
+2. In `priorities.json`, set `lifecycle` to the next stage (e.g. `PressureTest` after Brief approval). Remove `In Review`. Clear or update `reviewDocumentPath` in `notes`.
 3. Update `lastUpdated` and `notes` with the next artifact path.
 
 ## Add project
 
-1. Create `initiatives/[Initiative]/projects/[Project Name]/` and `00-how-to-use.md`.
-2. Add under `priorities.json` → initiative → `projects`:
+1. Create `initiatives/[Initiative]/[Project Name]/` and `00-how-to-use.md` (flat under the initiative — not under `projects/`).
+2. Optionally add empty `repo/` with `.gitkeep` if the project has an associated GitHub repo (user runs `git submodule add`).
+3. Add under `priorities.json` → initiative → `projects`:
 
 ```json
 "Project Name": {
@@ -77,8 +82,14 @@ Do **not** create `ideas.md` or `DASHBOARD.md` rows.
 
 ## Add initiative
 
-1. Create folder layout under `initiatives/[Name]/` (sources, outputs, projects/General, wiki) — **no** `ideas.md`.
+1. Create folder layout under `initiatives/[Name]/`: `General/`, `history/` (`done-history.md`, `dropped-history.md`), `project-history.md`, `sources/`, `outputs/`, `wiki/` — **no** `ideas.md`, **no** `projects/` container.
 2. Add initiative entry to `priorities.json` with `tier`, `lastWork`, and default `General` project.
+
+## Done / Dropped / Closed Projects
+
+- Completed ideas: append to `history/done-history.md`; set `lifecycle` to `Done` in `priorities.json`.
+- Dropped ideas: append to `history/dropped-history.md`; set `lifecycle` to `Dropped`.
+- Closed projects: append to `project-history.md` under **## Closed Projects**; remove the project from `priorities.json`.
 
 ## Reconcile
 
@@ -96,4 +107,4 @@ If legacy `DASHBOARD.md` / `ideas.md` exist, run once:
 npm run migrate-registry
 ```
 
-Then delete the markdown registry files.
+Then delete the markdown registry files. If folders still use `initiatives/.../projects/[Project]/`, move them to the flat layout first.

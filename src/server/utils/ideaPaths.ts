@@ -3,7 +3,8 @@ import path from 'path';
 
 /**
  * Resolve the on-disk folder for an idea under an initiative.
- * Supports both `initiatives/[Init]/projects/[Proj]/[Idea]` and legacy flat layout.
+ * Prefers flat layout `initiatives/[Init]/[Proj]/[Idea]/`.
+ * If a legacy `projects/` container exists, uses that instead.
  */
 export const resolveIdeaFolderPath = (
   harnessRoot: string,

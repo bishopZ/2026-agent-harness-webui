@@ -8,7 +8,7 @@
 
 ## What ships when this idea is done
 
-This is a **workflow validation** deliverable, not a product launch. The committed outcome is proof that the My Company initiative can move an idea from capture through an approved Brief and into Pressure Test using the standard folder layout (`projects/General/[Idea]/`). Optional follow-on: a one-page note in `outputs/` summarizing lessons for onboarding new contributors to the lifecycle. No code, no customer-facing release.
+This is a **workflow validation** deliverable, not a product launch. The committed outcome is proof that the My Company initiative can move an idea from capture through an approved Brief and into Pressure Test using the standard folder layout (`General/[Idea]/`). Optional follow-on: a one-page note in `outputs/` summarizing lessons for onboarding new contributors to the lifecycle. No code, no customer-facing release.
 
 ---
 

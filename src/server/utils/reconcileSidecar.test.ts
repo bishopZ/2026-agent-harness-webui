@@ -16,7 +16,7 @@ const assert = (cond: boolean, msg: string) => {
 
 const main = async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'reconcile-test-'));
-  const initDir = path.join(tmp, 'initiatives', 'TestInit', 'projects', 'General', 'Test Idea');
+  const initDir = path.join(tmp, 'initiatives', 'TestInit', 'General', 'Test Idea');
   fs.mkdirSync(initDir, { recursive: true });
 
   fs.writeFileSync(

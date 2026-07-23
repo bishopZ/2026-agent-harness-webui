@@ -23,3 +23,7 @@ All references clean: no INITIATIVES_TRACKER, PRIORITIZATION_AND_NEXT_WORK, Bish
 ## [2026-05-29] update | Example Idea captured (General)
 
 Added **Example Idea** under project **General** via add-idea: `priorities.json` lifecycle **In Review**, brief at `projects/General/Example Idea/01_brief.md`. Registry migrated to priorities-only (removed `ideas.md` / `DASHBOARD.md`). Next stage after owner approval: Pressure Test (`02_pressure_test.md`).
+
+## [2026-07-23] update | Synced to main Agent Harness v2.0.0 layout
+
+Flattened project folders (`projects/General/` → `General/`), added `history/` done/dropped logs, and synced system docs/skills to upstream v2.0.0 while keeping `priorities.json` as the registry. Example Idea brief path is now `General/Example Idea/01_brief.md`.
