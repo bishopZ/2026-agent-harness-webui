@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import fs from 'fs';
-import path from 'path';
 import { marked } from 'marked';
 import { guardOrReject } from './files.js';
 import { rewriteMarkdownLinks } from '../utils/linkRewrite.js';
+import { normalizeRenderPath } from '../utils/renderPath.js';
 
 export function createRenderRouter(harnessRoot: string): Router {
   const router = Router();
@@ -13,6 +13,9 @@ export function createRenderRouter(harnessRoot: string): Router {
    * Reads a .md file from HARNESS_ROOT, renders it to HTML via marked v12,
    * rewrites relative .md hrefs to /doc?path= in-app routes,
    * and returns { html: string }.
+   *
+   * `path` may be initiatives-relative (sidebar) or harness-root
+   * (`reviewDocumentPath` / AGENTS.md). See normalizeRenderPath.
    */
   router.get('/', (req, res) => {
     const requestedPath = req.query['path'] as string | undefined;
@@ -21,7 +24,7 @@ export function createRenderRouter(harnessRoot: string): Router {
       return;
     }
 
-    const restoredPath = path.join('initiatives', requestedPath);
+    const restoredPath = normalizeRenderPath(requestedPath);
     const safePath = guardOrReject(harnessRoot, restoredPath, res);
     if (!safePath) return; // guardOrReject already sent 403
 

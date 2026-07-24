@@ -131,7 +131,14 @@ Project: [Name]
     - ...
 ```
 
-Then state what actions you plan to take. Wait for the user to confirm before writing any files.
+**In Review checklist (required):** Also list every idea that will land in the Web UI approval queue:
+
+```
+In Review (approval queue): [count]
+  - [Idea] — source: ideas.md | artifact detector — reviewDocumentPath: initiatives/.../0N_....md
+```
+
+State the expected approval-queue count. Wait for the user to confirm before writing any files — treat the In Review list as an explicit checklist item, not an afterthought.
 
 ---
 
@@ -174,15 +181,35 @@ For each idea subfolder:
   | `08_marketing_pack.md` | `Marketing` |
   | `09_growth_log.md` | `Growth` |
 
-  If the brief (or latest stage artifact) has `**Status:** In Review`, set `lifecycle` to **`In Review`** instead and add a `reviewDocumentPath:` line in `notes` (see `AGENTS.md`).
+  **Waiting-state override (do this before accepting the stage default):**
+
+  1. Prefer an **`ideas.md` In Review row** for this idea when step 4c found one — that wins over filename mapping.
+  2. Otherwise inspect the **latest stage artifact** (same order as the table above; for Build prefer `05_build_plan.md` or `06_evaluation.md` over nested verification-log noise). Treat as awaiting approval when body or YAML status matches any of:
+     - `/in\s*review/i` (covers `**Status:** In Review`, `Draft (In Review)`, YAML `status: In Review`, etc.)
+     - `/draft/i` **and** `/awaiting (approval|owner|review)/i`
+     - YAML or `**Status:**` is `Draft` / `Drafted`, and the artifact is **not** marked superseded, blocked, or “do not approve”
+  3. If awaiting: set `lifecycle` to **`In Review`** and add `reviewDocumentPath:` to that latest stage file (harness-root path — see below).
+  4. Only if not awaiting: use the highest-artifact stage mapping from the table.
+
+  Do **not** rely on an exact ``**Status:** In Review`` string alone — that missed most queue rows on real imports.
 
   Set **priority** to `Medium` unless the user specified otherwise. Set **lastUpdated** to today. Set **notes** to `Imported [YYYY-MM-DD] - verify status and next step.` (plus `reviewDocumentPath` when `In Review`).
 
+  **`reviewDocumentPath` convention:** harness-root relative, always including the `initiatives/` prefix (see `AGENTS.md`). Example: `reviewDocumentPath: initiatives/Time2Magic/Cloudscape Addons/Merge articles and docs/02_pressure_test.md`. The Web UI `/api/render` accepts both this form and initiatives-relative sidebar paths — do **not** invent a second convention by stripping `initiatives/`.
+
 - **If the idea entry exists but the folder was missing** (the reverse gap): note it in your summary. Do not delete the entry; add a note in **notes** that the artifact folder was not found.
 
-### 4c - Handle Done and Dropped ideas
+### 4c - Handle legacy `ideas.md` (In Review, Done, Dropped)
 
-If the imported material includes Done/Dropped rows from an old `ideas.md` (or equivalent), append those rows into the current initiative’s `history/done-history.md` and `history/dropped-history.md` tables. Also set matching `lifecycle` values in `priorities.json` when the ideas are registered. Do not duplicate history rows that already exist.
+If the imported material still has an initiative `ideas.md` (or equivalent), treat it as a **temporary source of truth** for queue and history — apply it **before** deleting or ignoring the file.
+
+1. **In Review (approval queue):** Parse Active idea tables. For every row with Status **In Review**:
+   - Ensure the idea is registered under the correct project.
+   - Set `lifecycle: "In Review"`.
+   - Set `reviewDocumentPath:` from the row’s primary stage-artifact link (resolve relative to the initiative folder; after any folder remaps such as flattening nested idea folders, rewrite the path to the current disk location).
+   - Prefer this over filename→stage mapping in 4b.
+2. **Done / Dropped:** Append those rows into the current initiative’s `history/done-history.md` and `history/dropped-history.md` tables. Also set matching `lifecycle` values in `priorities.json` when the ideas are registered. Do not duplicate history rows that already exist.
+3. **Do not delete `ideas.md` until** In Review, Done, and Dropped rows have been applied to `priorities.json` (or the user explicitly confirms skipping specific rows). Leave deletion to a later cleanup or health-check pass after registry verification — never delete the queue source mid-import.
 
 If the import still has legacy markdown registries at the harness root, mention `npm run migrate-registry` once after structural import (see [`docs/priorities-registry.md`](../../docs/priorities-registry.md)).
 
@@ -264,4 +291,5 @@ After all changes are written:
 - **Always create `sources/`** at the project level even if no source documents exist yet.
 - Project folders must live at `initiatives/[Initiative]/[Project Name]/`, not under a legacy `projects/` subfolder. If imports still use the old `.../projects/<Project>/` path from v1.x, re-home them to the flat layout before registering.
 - If the imported folder contains a `wiki/` subfolder, do not merge it automatically into the current initiative wiki. Flag it and ask the user whether to merge, ingest as sources, or leave it in place.
-- Do **not** edit `ideas.md` or `DASHBOARD.md`.
+- Do **not** edit `ideas.md` or `DASHBOARD.md` as living registries — migrate their In Review / Done / Dropped rows into `priorities.json` and history files first (step 4c), then leave deletion to a verified cleanup pass.
+- Never delete `ideas.md` mid-import before In Review rows are applied to `priorities.json`.
