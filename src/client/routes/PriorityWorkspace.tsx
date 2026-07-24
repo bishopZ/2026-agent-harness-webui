@@ -34,8 +34,14 @@ export function PriorityWorkspace() {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
+  // Keep local discover tree in sync after a successful save so expand/collapse
+  // remounts PrioritySelect / TierInput from the latest values (not the fetch snapshot).
+  const applyLocalUpdate = useCallback((path: string, value: unknown) => {
+    setDiscoverData(prev => (prev ? setAtDotPath(prev, path, value) : prev));
+  }, []);
+
   // ── Priority update hook ──────────────────────────────────────────────────
-  const { update, saving } = usePriorityUpdate(addToast);
+  const { update, saving } = usePriorityUpdate(addToast, applyLocalUpdate);
 
   // ── Data fetch on mount ───────────────────────────────────────────────────
   useEffect(() => {
@@ -129,6 +135,22 @@ export function PriorityWorkspace() {
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </>
   );
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Immutable deep set for dot-paths like `initiatives.X.projects.Y.priority`. */
+function setAtDotPath<T extends object>(root: T, path: string, value: unknown): T {
+  const parts = path.split('.');
+  const clone = structuredClone(root) as Record<string, unknown>;
+  let cur: Record<string, unknown> = clone;
+
+  for (let i = 0; i < parts.length - 1; i++) {
+    cur = cur[parts[i]!] as Record<string, unknown>;
+  }
+
+  cur[parts[parts.length - 1]!] = value;
+  return clone as T;
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────

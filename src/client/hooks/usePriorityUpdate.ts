@@ -5,6 +5,9 @@
  * Returns:
  *   update(path, value) — sends a POST and adds a toast on success or failure.
  *   saving               — Set of dot-paths currently in flight (used for unsaved indicators).
+ *
+ * onSuccess is called after a successful save so the caller can keep local
+ * discover data in sync (PrioritySelect remounts from that data on expand).
  */
 import { useState, useCallback } from 'react';
 import { type Toast } from '../components/Toast.js';
@@ -13,6 +16,7 @@ import { type Toast } from '../components/Toast.js';
 
 export function usePriorityUpdate(
   addToast: (t: Omit<Toast, 'id'>) => void,
+  onSuccess?: (path: string, value: unknown) => void,
 ) {
   const [saving, setSaving] = useState<Set<string>>(new Set());
 
@@ -37,6 +41,7 @@ export function usePriorityUpdate(
           }
           addToast({ message: msg, type: 'error' });
         } else {
+          onSuccess?.(path, value);
           addToast({ message: 'Saved', type: 'success' });
         }
       } catch (err) {
@@ -51,7 +56,7 @@ export function usePriorityUpdate(
         });
       }
     },
-    [addToast],
+    [addToast, onSuccess],
   );
 
   return { update, saving };

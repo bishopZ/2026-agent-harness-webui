@@ -131,9 +131,189 @@ The approval queue (shown at the top of the Priority workspace) is **derived**, 
 
 ---
 
-## Migration from markdown registries
+## How to migrate from a previous agent harness
 
-If you still have legacy `DASHBOARD.md` / `ideas.md` files, run once:
+Use this when you already have an older harness working tree (Markdown initiatives, optional project `repo/` submodules, custom rules/skills, `USER.md`) and want to move onto this Web UI harness. The process is manual today: copy your content into a fresh clone, re-wire git submodules carefully, then run the **import** skill so the registry and folder layout match v2.
+
+Streamlining this into fewer steps is planned; until then, follow the procedure below exactly. Skipping the submodule steps is the most common failure mode.
+
+### Before you start
+
+1. **Clean every working tree.** In the old harness root and in every project `repo/` submodule: commit or stash changes, and confirm `git status` is clean. Do not migrate with uncommitted work you care about still only on disk.
+2. Note the absolute path of your **old harness root** (call it `OLD_HARNESS`) and choose a **new folder name** for the fresh clone (call it `NEW_HARNESS`).
+3. If any submodule has **unpushed commits** or local-only state you need, export that first from the old harness (`git status`, `git push`, or `git bundle`) before you tear anything down. Restoring exact dirty local submodule state by copying `.git/modules` is fragile and is **not** the recommended path.
+
+### 1. Clone a clean copy of this harness
+
+```bash
+git clone git@github.com:bishopZ/2026-agent-harness-webui.git "./NEW_HARNESS"
+cd "./NEW_HARNESS"
+```
+
+Treat this clone as a **template**, not as your long-lived remote tracking branch for personal harness data:
+
+```bash
+rm -rf .git CHANGELOG.md
+```
+
+You will re-init git as *your* harness repo in a later step. Removing upstream `CHANGELOG.md` avoids mixing template release notes with your own history; keep or restore it only if you intentionally want upstream changelog history in your tree.
+
+### 2. Copy your content from the old harness
+
+Copy personal / initiative content into the new root. Do **not** overwrite the new harness’s system files (`SYSTEM_OVERVIEW.md`, `IDEA_LIFECYCLE.md`, `skills/` defaults, `src/`, etc.) unless you are deliberately carrying a customized fork of those files.
+
+Typical copies from `OLD_HARNESS` → `NEW_HARNESS`:
+
+| Copy | Notes |
+| --- | --- |
+| `initiatives/` | Your initiatives, projects, ideas, wikis, histories. See submodule section before copying `repo/` trees. |
+| Custom `rules/` files | Only files you added; merge carefully with shipped rules. |
+| Custom `skills/` | Only skills you added or customized. |
+| `USER.md` | Your user context. |
+| `archive/` | Completed / dropped bundles, if present. |
+| `.gitmodules` | Required if you use project `repo/` submodules (see below). |
+
+**Preferred approach for initiatives with submodules:** copy harness Markdown and initiative content **excluding** each `initiatives/**/repo` working tree (or copy everything and then delete each `.../repo` directory before re-init). Plain recursive copies of `repo/` folders usually break submodule metadata — see [Project `repo/` submodules](#project-repo-submodules).
+
+### 3. Configure the Web UI environment
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and set `HARNESS_ROOT` to the **absolute path** of `NEW_HARNESS` (the folder that contains `SYSTEM_OVERVIEW.md`, `priorities.json`, and `initiatives/`).
+
+### 4. Initialize your harness git repo
+
+```bash
+git init
+cp "../OLD_HARNESS/.gitmodules" ./   # if you had project submodules; otherwise skip
+```
+
+If you use project `repo/` submodules, complete [Project `repo/` submodules](#project-repo-submodules) **now** — before a broad `git add initiatives/` — so you do not accidentally ingest product source as normal files.
+
+Then add and commit the harness tree:
+
+```bash
+git add .
+git commit -m "Initial commit from harness migration"
+```
+
+Open the new folder in your IDE or Cowork session.
+
+### 5. Run the import skill
+
+Tell the agent you just upgraded to a new harness version and ask it to run the **import** skill (`skills/import/SKILL.md`). That skill:
+
+- Verifies / repairs folder structure (flat `initiatives/[Initiative]/[Project]/[Idea]/`, required `sources/` / `outputs/`)
+- Reconciles and registers projects and ideas in `priorities.json`
+- Migrates legacy `ideas.md` In Review / Done / Dropped rows into the registry and history files
+- Fixes broken path links where it can
+
+If legacy root `DASHBOARD.md` / `ideas.md` registries still need a bulk pass into `priorities.json`, you can also run:
+
+```bash
+npm run migrate-registry
+```
+
+See [docs/priorities-registry.md](docs/priorities-registry.md). Prefer running structural import first, then registry cleanup.
+
+### 6. Post-import cleanup
+
+After import finishes:
+
+1. **Remove old unused `ideas.md` files** (and root `DASHBOARD.md` if present) only after In Review / Done / Dropped rows have been applied to `priorities.json` and history files.
+2. **Run the health-check skill** and fix anything it flags.
+3. **Rename leftover old titles** inside lifecycle artifacts if folders were renamed during migration (for example idea titles in headers that still use previous project or idea names).
+4. Commit the cleanup:
+
+```bash
+git add .
+git commit -m "Post-migration import cleanup"
+```
+
+### 7. Install and run the Web UI
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:3747/` (or your configured `PORT`) in a browser. Confirm the Priority workspace and doc reader see your initiatives.
+
+---
+
+### Project `repo/` submodules
+
+Projects with an associated codebase use `initiatives/[Initiative]/[Project]/repo/` as a **git submodule** of the harness repo. Submodules are recorded as:
+
+- a `.gitmodules` file at the harness root, and
+- a **gitlink** entry in the harness index (mode `160000`) pointing at a commit SHA — not as a normal tree of product files.
+
+Migrating them incorrectly is easy. Use one of the procedures below.
+
+#### Recommended procedure
+
+1. Copy harness Markdown / initiative content **excluding** submodule working trees, **or** copy everything and then delete each `initiatives/**/repo` directory before re-init.
+2. Copy `.gitmodules` from the old harness root (or recreate equivalent `[submodule]` entries for each `repo/` path).
+3. From the **new harness root**, restore gitlinks and check out the submodule contents:
+
+   **Option A — preserve the same SHAs as the old harness**
+
+   ```bash
+   # In OLD_HARNESS: list submodule gitlinks (mode 160000)
+   git ls-files --stage | grep '^160000'
+   # Example line:
+   # 160000 <sha> 0       initiatives/Time2Magic/Some Project/repo
+
+   # In NEW_HARNESS: with .gitmodules already copied, register each gitlink:
+   git update-index --add --cacheinfo 160000,<sha>,"initiatives/[Initiative]/[Project]/repo"
+
+   git submodule update --init --recursive
+   ```
+
+   **Option B — init after gitlinks are already in the new index / committed tree**
+
+   Same end state as Option A if the committed tree already has mode-`160000` entries for each `repo/` path (for example you recreated them with `git submodule add` and checked out the desired commit). Then:
+
+   ```bash
+   git submodule update --init --recursive
+   ```
+
+4. Verify:
+
+   ```bash
+   git submodule status
+   # and inside one project repo:
+   cd "initiatives/[Initiative]/[Project]/repo"
+   git status
+   ```
+
+5. Commit **only** `.gitmodules` and the gitlink entries — never commit the full contents of `repo/` into the harness as regular files.
+
+To attach a brand-new project repo later (not a migration), from the harness root:
+
+```bash
+git submodule add <repository-url> "initiatives/[Initiative]/[Project]/repo"
+```
+
+#### Anti-patterns (do not do these)
+
+| Anti-pattern | What goes wrong |
+| --- | --- |
+| Copying `initiatives/**/repo` with their `.git` pointer files but **not** the parent’s `.git/modules/` | `fatal: not a git repository: .../.git/modules/...` |
+| Copying only `.gitmodules` and committing | Root looks fine; each `repo/` is still broken / empty |
+| `git add initiatives/` after a plain folder copy of product trees | Ingests application source as normal harness files and **destroys** the submodule relationship |
+| Expecting a recursive Finder / `cp -R` of the old tree to preserve submodules | Copies worktree files and broken git pointers; does not recreate gitlinks |
+| Copying `.git/modules` by itself to “save” local submodule state | Fragile (worktree paths, index mode); not recommended |
+
+If you need exact local submodule state (unpushed commits, dirty trees), export from the old harness first, re-init submodules in the new harness, then restore onto those checkouts.
+
+---
+
+### Migration from markdown registries only
+
+If you are already on this harness layout and only still have legacy `DASHBOARD.md` / `ideas.md` files:
 
 ```bash
 npm run migrate-registry
