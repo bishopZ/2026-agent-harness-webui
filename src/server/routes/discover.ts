@@ -25,6 +25,9 @@ import { reconcile, buildDiscoverResponse } from '../utils/reconcileSidecar.js';
  *     }
  *   }
  * }
+ *
+ * For In Review ideas, `lifecycle` is the stage under review (from
+ * reviewDocumentPath), matching GET /api/approval-queue.
  */
 export function createDiscoverRouter(harnessRoot: string): Router {
   const router = Router();

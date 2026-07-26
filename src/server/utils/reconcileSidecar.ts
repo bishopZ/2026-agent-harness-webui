@@ -14,6 +14,7 @@ import {
   defaultIdea,
   todayISO,
 } from './sidecarTypes.js';
+import { lifecycleDisplayForIdea } from './reviewStageFromPath.js';
 
 // ─── File I/O helpers ─────────────────────────────────────────────────────────
 
@@ -131,9 +132,34 @@ export async function reconcile(harnessRoot: string): Promise<PrioritiesFile> {
  *
  * Each initiative node includes: tier, lastWork, projects (with priority),
  * and ideas (with priority + lifecycle + lastUpdated + notes).
+ *
+ * For ideas with registry lifecycle "In Review", `lifecycle` in the response is
+ * the stage under review (from reviewDocumentPath) — same as the approval queue.
+ * Disk/`priorities.json` is not modified.
  */
 export function buildDiscoverResponse(sidecar: PrioritiesFile): PrioritiesFile {
-  return sidecar;
+  const initiatives: PrioritiesFile['initiatives'] = {};
+
+  for (const [initName, initEntry] of Object.entries(sidecar.initiatives)) {
+    const projects: InitiativeEntry['projects'] = {};
+
+    for (const [projName, projEntry] of Object.entries(initEntry.projects)) {
+      const ideas: ProjectEntry['ideas'] = {};
+
+      for (const [ideaName, ideaEntry] of Object.entries(projEntry.ideas)) {
+        ideas[ideaName] = {
+          ...ideaEntry,
+          lifecycle: lifecycleDisplayForIdea(ideaEntry),
+        };
+      }
+
+      projects[projName] = { ...projEntry, ideas };
+    }
+
+    initiatives[initName] = { ...initEntry, projects };
+  }
+
+  return { ...sidecar, initiatives };
 }
 
 /**

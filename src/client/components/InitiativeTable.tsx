@@ -166,22 +166,21 @@ export function InitiativeTable({ data, onUpdate, saving = new Set() }: Props) {
               }}
             >
               <span style={caretStyle}>{isExpanded ? '▾' : '▸'}</span>
+              {onUpdate ? (
+                <span onClick={e => e.stopPropagation()}>
+                  <TierInput
+                    initName={initName}
+                    defaultValue={init.tier}
+                    onUpdate={onUpdate}
+                    saving={saving}
+                  />
+                </span>
+              ) : (
+                <span style={initMetaStyle}>{init.tier}</span>
+              )}
               <span style={initNameStyle}>{initName}</span>
-              <span style={initMetaStyle} onClick={e => e.stopPropagation()}>
-                {onUpdate ? (
-                  <>
-                    Tier{' '}
-                    <TierInput
-                      initName={initName}
-                      defaultValue={init.tier}
-                      onUpdate={onUpdate}
-                      saving={saving}
-                    />
-                    {' '}· Last work: {lastWork} · {projectCount} project{projectCount !== 1 ? 's' : ''}
-                  </>
-                ) : (
-                  `Tier ${init.tier} · Last work: ${lastWork} · ${projectCount} project${projectCount !== 1 ? 's' : ''}`
-                )}
+              <span style={initMetaStyle}>
+                Last work: {lastWork} · {projectCount} project{projectCount !== 1 ? 's' : ''}
               </span>
             </div>
 

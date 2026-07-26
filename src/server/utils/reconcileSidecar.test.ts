@@ -5,7 +5,8 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { reconcile } from './reconcileSidecar.js';
+import { buildDiscoverResponse, reconcile } from './reconcileSidecar.js';
+import type { PrioritiesFile } from './sidecarTypes.js';
 
 const assert = (cond: boolean, msg: string) => {
   if (!cond) {
@@ -30,6 +31,34 @@ const main = async () => {
   assert(
     idea?.lifecycle === 'In Review',
     `expected In Review, got ${idea?.lifecycle}`
+  );
+
+  // Discover response should surface the stage under review, not "In Review"
+  idea!.notes =
+    'reviewDocumentPath: initiatives/TestInit/General/Test Idea/01_brief.md';
+  const discover = buildDiscoverResponse({
+    version: 3,
+    updated: '2026-05-29',
+    initiatives: {
+      TestInit: {
+        tier: 5,
+        lastWork: '',
+        projects: {
+          General: {
+            priority: 'Medium',
+            ideas: { 'Test Idea': { ...idea! } },
+          },
+        },
+      },
+    },
+  } satisfies PrioritiesFile);
+  const display =
+    discover.initiatives['TestInit']?.projects['General']?.ideas['Test Idea']
+      ?.lifecycle;
+  assert(display === 'Brief', `discover lifecycle should be Brief, got ${display}`);
+  assert(
+    idea?.lifecycle === 'In Review',
+    'buildDiscoverResponse must not mutate the sidecar idea'
   );
 
   fs.rmSync(tmp, { recursive: true, force: true });

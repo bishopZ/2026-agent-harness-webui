@@ -1,10 +1,15 @@
 import { Router } from 'express';
 import { loadCurrentSidecar } from '../utils/reconcileSidecar.js';
+import {
+  lifecycleDisplayForIdea,
+  parseReviewDocumentPath,
+} from '../utils/reviewStageFromPath.js';
 
 export interface QueueItem {
   initiative: string;
   project: string;
   idea: string;
+  /** Stage under review (Brief, Pressure Test, …), not the registry "In Review" flag. */
   lifecycle: string;
   lastUpdated: string;
   reviewDocumentPath?: string;
@@ -15,6 +20,9 @@ export interface QueueItem {
  *
  * Reads priorities.json and returns an array of every idea whose lifecycle
  * field equals "In Review".  Returns [] when nothing is pending.
+ *
+ * `lifecycle` in each row is the stage being reviewed (from reviewDocumentPath),
+ * since every queue item is already In Review by definition.
  *
  * Response shape: QueueItem[]
  */
@@ -30,13 +38,12 @@ export function createApprovalQueueRouter(harnessRoot: string): Router {
         for (const [projName, projEntry] of Object.entries(initEntry.projects)) {
           for (const [ideaName, ideaEntry] of Object.entries(projEntry.ideas)) {
             if (ideaEntry.lifecycle === 'In Review') {
-              const match = ideaEntry.notes?.match(/^reviewDocumentPath:\s+(.+)$/m);
-              const reviewDocumentPath = match ? match[1].trim() : undefined;
+              const reviewDocumentPath = parseReviewDocumentPath(ideaEntry.notes);
               queue.push({
                 initiative: initName,
                 project: projName,
                 idea: ideaName,
-                lifecycle: ideaEntry.lifecycle,
+                lifecycle: lifecycleDisplayForIdea(ideaEntry),
                 lastUpdated: ideaEntry.lastUpdated,
                 ...(reviewDocumentPath !== undefined && { reviewDocumentPath }),
               });

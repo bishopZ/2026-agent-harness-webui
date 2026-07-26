@@ -13,7 +13,7 @@
     "preview": "NODE_ENV=production tsx src/server/index.ts",
     "start": "NODE_ENV=production node dist/server/index.js",
     "migrate-registry": "tsx scripts/migrate-registry.ts",
-    "test": "tsx src/server/utils/pathGuard.test.ts && tsx src/server/utils/renderCheck.test.ts && tsx src/server/utils/renderPath.test.ts && tsx src/server/utils/reconcileSidecar.test.ts && tsx src/server/utils/approvalQueue.test.ts"
+    "test": "find src -name '*.test.ts' | sort | while IFS= read -r f; do echo \"\\n▶ $f\"; tsx \"$f\" || exit 1; done"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

@@ -1,5 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  ancestorDirPaths,
+  buildFileTree,
+  normalizeSidebarPath,
+  type FileTreeNode,
+} from '../utils/fileTree.js';
+
+const EXPANDED_STORAGE_KEY = 'harness-sidebar-expanded';
 
 /**
  * Sidebar — Doc reader file tree (read-only navigation).
@@ -7,13 +15,35 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
  * F-07 compliance: zero <input>, <select>, or <textarea> elements.
  * All interaction is via <button> elements only.
  */
+
+const readExpandedFromStorage = (): Set<string> => {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(EXPANDED_STORAGE_KEY);
+    if (!raw) return new Set();
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((p): p is string => typeof p === 'string'));
+  } catch {
+    return new Set();
+  }
+};
+
+const writeExpandedToStorage = (expanded: Set<string>): void => {
+  localStorage.setItem(EXPANDED_STORAGE_KEY, JSON.stringify([...expanded]));
+};
+
 export function Sidebar() {
   const [files, setFiles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(readExpandedFromStorage);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const currentPath = searchParams.get('path') ?? '';
+  const selectedPath = normalizeSidebarPath(currentPath);
+  const selectedRef = useRef<HTMLButtonElement | null>(null);
+  const tree = buildFileTree(files);
 
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
     if (typeof window === 'undefined' || window.innerWidth <= 768) return 260;
@@ -44,7 +74,7 @@ export function Sidebar() {
     function onMouseUp() {
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
-      setSidebarWidth(prev => {
+      setSidebarWidth((prev) => {
         localStorage.setItem('harness-sidebar-width', String(prev));
         return prev;
       });
@@ -67,8 +97,103 @@ export function Sidebar() {
       });
   }, []);
 
-  function handleClick(filePath: string) {
+  // Deep link / selection: expand ancestors and persist so revisit keeps them open.
+  useEffect(() => {
+    if (!selectedPath || loading) return;
+    const ancestors = ancestorDirPaths(selectedPath);
+    if (ancestors.length === 0) return;
+
+    setExpanded((prev) => {
+      let changed = false;
+      const next = new Set(prev);
+      for (const dir of ancestors) {
+        if (!next.has(dir)) {
+          next.add(dir);
+          changed = true;
+        }
+      }
+      if (!changed) return prev;
+      writeExpandedToStorage(next);
+      return next;
+    });
+  }, [selectedPath, loading]);
+
+  // Scroll selected file into view after expand/render.
+  useEffect(() => {
+    if (!selectedPath || loading) return;
+    // Wait a frame so expanded ancestors have rendered the file row.
+    const id = requestAnimationFrame(() => {
+      selectedRef.current?.scrollIntoView({ block: 'nearest' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [selectedPath, loading, expanded]);
+
+  function toggleDir(dirPath: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(dirPath)) next.delete(dirPath);
+      else next.add(dirPath);
+      writeExpandedToStorage(next);
+      return next;
+    });
+  }
+
+  function handleFileClick(filePath: string) {
     navigate(`/doc?path=${encodeURIComponent(filePath)}`);
+  }
+
+  function renderNodes(nodes: FileTreeNode[], depth: number): React.ReactNode {
+    return nodes.map((node) => {
+      const padLeft = `calc(0.75rem + ${depth * 0.85}rem)`;
+
+      if (node.type === 'dir') {
+        const isOpen = expanded.has(node.path);
+        return (
+          <li key={`dir:${node.path}`} style={{ listStyle: 'none' }}>
+            <button
+              type="button"
+              onClick={() => toggleDir(node.path)}
+              style={{ ...rowButtonStyle, paddingLeft: padLeft }}
+              aria-expanded={isOpen}
+              title={node.path}
+            >
+              <span style={twirlStyle} aria-hidden="true">
+                {isOpen ? '▼' : '▶'}
+              </span>
+              <span style={labelStyle}>{node.name}</span>
+            </button>
+            {isOpen && (
+              <ul style={nestedListStyle} role="list">
+                {renderNodes(node.children, depth + 1)}
+              </ul>
+            )}
+          </li>
+        );
+      }
+
+      const isSelected = node.path === selectedPath;
+      return (
+        <li key={`file:${node.path}`} style={{ listStyle: 'none' }}>
+          <button
+            type="button"
+            ref={isSelected ? selectedRef : undefined}
+            onClick={() => handleFileClick(node.path)}
+            style={{
+              ...rowButtonStyle,
+              paddingLeft: padLeft,
+              background: isSelected ? '#dbeafe' : 'transparent',
+              fontWeight: isSelected ? '600' : '400',
+            }}
+            title={node.path}
+            aria-current={isSelected ? 'page' : undefined}
+            data-path={node.path}
+          >
+            <span style={twirlSpacerStyle} aria-hidden="true" />
+            <span style={labelStyle}>{node.name}</span>
+          </button>
+        </li>
+      );
+    });
   }
 
   return (
@@ -89,23 +214,7 @@ export function Sidebar() {
         </p>
       )}
       <ul style={listStyle} role="list">
-        {files.map((filePath) => (
-          <li key={filePath} style={{ listStyle: 'none' }}>
-            <button
-              onClick={() => handleClick(filePath)}
-              style={{
-                ...fileButtonStyle,
-                background:
-                  currentPath === filePath ? '#dbeafe' : 'transparent',
-                fontWeight: currentPath === filePath ? '600' : '400',
-              }}
-              title={filePath}
-              aria-current={currentPath === filePath ? 'page' : undefined}
-            >
-              {filePath}
-            </button>
-          </li>
-        ))}
+        {renderNodes(tree, 0)}
       </ul>
       {isDesktop && (
         <div
@@ -121,7 +230,7 @@ export function Sidebar() {
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
 const sidebarStyle: React.CSSProperties = {
-  width: '260px',          // default; overridden by inline style
+  width: '260px',
   height: '100vh',
   overflowY: 'auto',
   borderRight: '1px solid #e5e7eb',
@@ -129,7 +238,7 @@ const sidebarStyle: React.CSSProperties = {
   flexShrink: 0,
   display: 'flex',
   flexDirection: 'column',
-  position: 'relative',   // needed for drag handle absolute positioning
+  position: 'relative',
 };
 
 const headerStyle: React.CSSProperties = {
@@ -145,6 +254,11 @@ const listStyle: React.CSSProperties = {
   flex: 1,
 };
 
+const nestedListStyle: React.CSSProperties = {
+  margin: 0,
+  padding: 0,
+};
+
 const dragHandleStyle: React.CSSProperties = {
   position: 'absolute',
   right: 0,
@@ -155,17 +269,40 @@ const dragHandleStyle: React.CSSProperties = {
   zIndex: 10,
 };
 
-const fileButtonStyle: React.CSSProperties = {
-  display: 'block',
+const rowButtonStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.35rem',
   width: '100%',
   textAlign: 'left',
-  padding: '0.25rem 0.75rem',
+  paddingTop: '0.25rem',
+  paddingRight: '0.75rem',
+  paddingBottom: '0.25rem',
   fontSize: '0.75rem',
   fontFamily: 'monospace',
   border: 'none',
   cursor: 'pointer',
   color: '#374151',
+  background: 'transparent',
   whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+};
+
+const twirlStyle: React.CSSProperties = {
+  flexShrink: 0,
+  width: '0.75rem',
+  fontSize: '0.55rem',
+  lineHeight: 1,
+  color: '#6b7280',
+};
+
+const twirlSpacerStyle: React.CSSProperties = {
+  flexShrink: 0,
+  width: '0.75rem',
+};
+
+const labelStyle: React.CSSProperties = {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
 };
