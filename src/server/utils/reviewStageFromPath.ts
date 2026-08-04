@@ -39,6 +39,11 @@ export const reviewStageFromPath = (reviewDocumentPath?: string): string | null 
   // Build checkpoint / slice / verification artifacts live under 05_build/
   if (/(^|\/)05_build(\/|$)/i.test(normalized)) return 'Build';
 
+  // Finished deliverables under outputs/ are reviewed at Build checkpoints
+  // (document / report / asset ideas). Keep the deep link to the deliverable;
+  // still show Build as the stage under review.
+  if (/(^|\/)outputs(\/|$)/i.test(normalized)) return 'Build';
+
   return null;
 };
 

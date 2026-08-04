@@ -40,6 +40,10 @@ const cases: [string | undefined, string | null][] = [
     'initiatives/X/Y/Z/05_build/verification_log.md',
     'Build',
   ],
+  [
+    'initiatives/Time2Magic/Company website/Agent Harness comparison article/outputs/agent-harness-article.md',
+    'Build',
+  ],
   ['initiatives/X/Y/Z/06_evaluation.md', 'Evaluation'],
   ['initiatives/X/Y/Z/07_launch_plan.md', 'Launch'],
   ['initiatives/X/Y/Z/08_marketing_pack.md', 'Marketing'],

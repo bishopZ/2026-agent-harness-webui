@@ -214,12 +214,10 @@ export function InitiativeTable({ data, onUpdate, saving = new Set() }: Props) {
                           }}
                         >
                           <span style={caretStyle}>{isProjExpanded ? '▾' : '▸'}</span>
-                          <span style={projNameStyle}>{projName}</span>
                           <span
                             style={projMetaStyle}
                             onClick={e => e.stopPropagation()}
                           >
-                            Priority:{' '}
                             {onUpdate ? (
                               <PrioritySelect
                                 path={projPriorityPath}
@@ -231,7 +229,10 @@ export function InitiativeTable({ data, onUpdate, saving = new Set() }: Props) {
                             ) : (
                               <PriorityBadge value={proj.priority} />
                             )}
-                            {' '}· {ideaCount} idea{ideaCount !== 1 ? 's' : ''}
+                          </span>
+                          <span style={projNameStyle}>{projName}</span>
+                          <span style={projMetaStyle}>
+                            {ideaCount} idea{ideaCount !== 1 ? 's' : ''}
                           </span>
                         </div>
 
