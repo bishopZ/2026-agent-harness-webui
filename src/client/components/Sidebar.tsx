@@ -231,8 +231,8 @@ export function Sidebar() {
 
 const sidebarStyle: React.CSSProperties = {
   width: '260px',
-  height: '100vh',
-  overflowY: 'auto',
+  minHeight: 0,
+  overflow: 'hidden',
   borderRight: '1px solid #e5e7eb',
   background: '#f9fafb',
   flexShrink: 0,

@@ -10,7 +10,9 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { ApprovalQueue, type QueueItem } from '../components/ApprovalQueue.js';
+import { BuildCheckpoints, collectCheckpointRows } from '../components/BuildCheckpoints.js';
 import { InitiativeTable, type DiscoverData } from '../components/InitiativeTable.js';
+import { isOwnerBlocked } from '../utils/checkpointSort.js';
 import { ToastContainer, type Toast } from '../components/Toast.js';
 import { usePriorityUpdate } from '../hooks/usePriorityUpdate.js';
 
@@ -66,6 +68,11 @@ export function PriorityWorkspace() {
       });
   }, []);
 
+  // ── Derived ───────────────────────────────────────────────────────────────
+  const blockedCheckpoints = discoverData
+    ? collectCheckpointRows(discoverData).filter(r => isOwnerBlocked(r.status)).length
+    : 0;
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -104,6 +111,19 @@ export function PriorityWorkspace() {
             <a href="/doc" style={navLinkStyle}>Doc Reader →</a>
           </nav>
         </header>
+
+        {/* ── Build Checkpoints ────────────────────────────────────────── */}
+        <section style={sectionStyle}>
+          <h2 style={h2Style}>
+            Build Checkpoints
+            {blockedCheckpoints > 0 && (
+              <span style={badgeStyle}>{blockedCheckpoints}</span>
+            )}
+          </h2>
+          {discoverData && <BuildCheckpoints data={discoverData} />}
+        </section>
+
+        <hr style={dividerStyle} />
 
         {/* ── Initiative List ──────────────────────────────────────────── */}
         <section style={sectionStyle}>

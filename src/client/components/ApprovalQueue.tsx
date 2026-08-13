@@ -9,6 +9,7 @@
  */
 
 import { useState } from 'react';
+import { compareLifecycleStages } from '../utils/lifecycleStage.js';
 
 export interface QueueItem {
   initiative: string;
@@ -39,6 +40,8 @@ const COLUMNS: { key: SortKey; label: string }[] = [
 const compareItems = (a: QueueItem, b: QueueItem, key: SortKey, dir: SortDir): number => {
   const left = a[key] ?? '';
   const right = b[key] ?? '';
+  if (key === 'lifecycle') return compareLifecycleStages(left, right, dir);
+
   const cmp = left.localeCompare(right, undefined, { sensitivity: 'base' });
   if (dir === 'asc') return cmp;
   return -cmp;
