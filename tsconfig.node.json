@@ -11,6 +11,7 @@
     "outDir": "dist/server",
     "rootDir": "src/server"
   },
-  "include": ["src/server", "vite.config.ts"],
+  "//": "vite.config.ts is deliberately not included — it lives outside rootDir (src/server), so compiling it here fails with TS6059 and emits stray vite.config.js at the repo root. Vite transpiles its own config.",
+  "include": ["src/server"],
   "exclude": ["node_modules", "dist"]
 }

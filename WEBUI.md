@@ -30,7 +30,7 @@ Lifecycle artifacts use the **flat** project layout (same as main Agent Harness)
 
 `initiatives/[Initiative]/[Project]/[Idea]/`
 
-Each initiative also has `history/` (done/dropped idea logs), `project-history.md` (Closed Projects), `wiki/`, `sources/`, and `outputs/`. There is no `projects/` container directory and no per-initiative `ideas.md`.
+Each initiative also has `history/` (done/dropped idea logs), `project-history.md` (Closed Projects), `wiki/`, `sources/`, and `outputs/`. There is no `projects/` container directory.
 
 ## Run
 
@@ -42,10 +42,10 @@ npm run dev
 
 Open `http://127.0.0.1:3747/`.
 
-## Migrate from markdown
+## Migrate leftover markdown registries
 
 ```bash
 npm run migrate-registry
 ```
 
-Then remove legacy `DASHBOARD.md` and `initiatives/*/ideas.md` if present. If folders still nest under `projects/`, move them to the flat layout first.
+Then remove leftover markdown registry files if present. If folders still nest under `projects/`, move them to the flat layout first.

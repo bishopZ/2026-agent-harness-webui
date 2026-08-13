@@ -25,7 +25,7 @@ AI editors default to the shortest path — without structure, every session sta
 | Rules | 6 | `rules/` |
 | Agent runbooks | 3 | `agents/` |
 | Lifecycle stages | 11 | `IDEA_LIFECYCLE.md` |
-| Registry | 1 | `priorities.json` (replaces `DASHBOARD.md` / `ideas.md`) |
+| Registry | 1 | `priorities.json` |
 | Local app | Express + React | `src/`, `npm run dev` |
 
 _Counts current as of v2.0.0._
@@ -207,10 +207,10 @@ Tell the agent you just upgraded to a new harness version and ask it to run the 
 
 - Verifies / repairs folder structure (flat `initiatives/[Initiative]/[Project]/[Idea]/`, required `sources/` / `outputs/`)
 - Reconciles and registers projects and ideas in `priorities.json`
-- Migrates legacy `ideas.md` In Review / Done / Dropped rows into the registry and history files
+- Migrates leftover markdown idea-table rows (In Review / Done / Dropped) into the registry and history files
 - Fixes broken path links where it can
 
-If legacy root `DASHBOARD.md` / `ideas.md` registries still need a bulk pass into `priorities.json`, you can also run:
+If leftover markdown registries still need a bulk pass into `priorities.json`, you can also run:
 
 ```bash
 npm run migrate-registry
@@ -222,7 +222,7 @@ See [docs/priorities-registry.md](docs/priorities-registry.md). Prefer running s
 
 After import finishes:
 
-1. **Remove old unused `ideas.md` files** (and root `DASHBOARD.md` if present) only after In Review / Done / Dropped rows have been applied to `priorities.json` and history files.
+1. **Remove leftover markdown registry files** only after In Review / Done / Dropped rows have been applied to `priorities.json` and history files.
 2. **Run the health-check skill** and fix anything it flags.
 3. **Rename leftover old titles** inside lifecycle artifacts if folders were renamed during migration (for example idea titles in headers that still use previous project or idea names).
 4. Commit the cleanup:
@@ -311,15 +311,15 @@ If you need exact local submodule state (unpushed commits, dirty trees), export 
 
 ---
 
-### Migration from markdown registries only
+### Migration from leftover markdown registries
 
-If you are already on this harness layout and only still have legacy `DASHBOARD.md` / `ideas.md` files:
+If you are already on this harness layout and still have leftover markdown registry files:
 
 ```bash
 npm run migrate-registry
 ```
 
-Then remove those markdown files. Agents maintain [docs/priorities-registry.md](docs/priorities-registry.md). Completed/dropped **projects** may be recorded in `initiatives/[Name]/project-history.md`.
+Then remove those files. Agents maintain [docs/priorities-registry.md](docs/priorities-registry.md). Completed/dropped **projects** may be recorded in `initiatives/[Name]/project-history.md`.
 
 ---
 

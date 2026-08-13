@@ -97,6 +97,15 @@ Agents (human or AI) reach for the same five or six shortcuts every time. Naming
 | "The wiki is for finished thinking" | The wiki is for durable thinking. Flag assumptions explicitly; do not wait until they are certain. |
 | "We can skip the log entry for this update" | Unlogged updates create drift between index, log, and reality. Always log ingests, updates, lints, and inits. |
 
+### On environment limits and hand-off
+
+| Rationalization | Reality |
+|---|---|
+| "I can't build/run this in my environment, so the idea is blocked" | You can still write the code and the exact run steps. Author the slice in `repo/`, verify what the shell supports, and hand the build/run to the owner in the checkpoint. An idea is only blocked when even authoring is impossible. |
+| "The blocker is obvious — I'll just note it in chat" | A blocker that is not written into a repo file does not exist. It vanishes at the end of the session and the next run rediscovers nothing. Write the owner step into the checkpoint and set the idea `In Review` with a `reason`. |
+| "This top idea is hard, I'll take an easier one this run" | next-idea executes the **top eligible** idea. Swapping to something easier because the top pick needs a build you can't run locally is silent scope-dodging. If you truly must deviate, record why in that idea's `notes` — never just skip it. |
+| "It's `Ready`, but it really needs the owner, so I'll work around it" | Then the status is wrong. `Ready` means the agent can take the next slice unaided; if that's false, fix the status to `In Review` with the owner step. Routing around a wrong signal leaves it wrong for the next run. |
+
 ## Using this file at a gate
 
 At every approval gate, ask:

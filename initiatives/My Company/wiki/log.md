@@ -22,7 +22,7 @@ All references clean: no INITIATIVES_TRACKER, PRIORITIZATION_AND_NEXT_WORK, Bish
 
 ## [2026-05-29] update | Example Idea captured (General)
 
-Added **Example Idea** under project **General** via add-idea: `priorities.json` lifecycle **In Review**, brief at `projects/General/Example Idea/01_brief.md`. Registry migrated to priorities-only (removed `ideas.md` / `DASHBOARD.md`). Next stage after owner approval: Pressure Test (`02_pressure_test.md`).
+Added **Example Idea** under project **General** via add-idea: `priorities.json` lifecycle **In Review**, brief at `projects/General/Example Idea/01_brief.md`. Next stage after owner approval: Pressure Test (`02_pressure_test.md`).
 
 ## [2026-07-23] update | Synced to main Agent Harness v2.0.0 layout
 

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import writeFileAtomic from 'write-file-atomic';
 import { prioritiesPath } from '../paths.js';
 import { discoverHarness, HarnessTree } from './discoverHarness.js';
@@ -8,6 +9,7 @@ import {
   PrioritiesFile,
   InitiativeEntry,
   ProjectEntry,
+  IdeaEntry,
   emptySidecar,
   defaultInitiative,
   defaultProject,
@@ -103,6 +105,28 @@ function mergeTrees(sidecar: PrioritiesFile, tree: HarnessTree, harnessRoot: str
   }
 }
 
+/**
+ * Harness-root-relative path to an idea's `05_build_plan.md`, or undefined when
+ * the file does not exist.
+ *
+ * Goes through `resolveIdeaFolderPath` so the legacy `projects/` container
+ * layout resolves correctly — the folder name cannot be assumed to be
+ * `initiatives/<init>/<proj>/<idea>`. Returns posix separators because the
+ * value becomes a URL query param.
+ */
+function buildPlanPathFor(
+  harnessRoot: string,
+  initName: string,
+  projName: string,
+  ideaName: string,
+): string | undefined {
+  const folder = resolveIdeaFolderPath(harnessRoot, initName, projName, ideaName);
+  const absolute = path.join(folder, '05_build_plan.md');
+  if (!fs.existsSync(absolute)) return undefined;
+
+  return path.relative(harnessRoot, absolute).split(path.sep).join('/');
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -137,7 +161,10 @@ export async function reconcile(harnessRoot: string): Promise<PrioritiesFile> {
  * the stage under review (from reviewDocumentPath) — same as the approval queue.
  * Disk/`priorities.json` is not modified.
  */
-export function buildDiscoverResponse(sidecar: PrioritiesFile): PrioritiesFile {
+export function buildDiscoverResponse(
+  sidecar: PrioritiesFile,
+  harnessRoot?: string,
+): PrioritiesFile {
   const initiatives: PrioritiesFile['initiatives'] = {};
 
   for (const [initName, initEntry] of Object.entries(sidecar.initiatives)) {
@@ -147,10 +174,22 @@ export function buildDiscoverResponse(sidecar: PrioritiesFile): PrioritiesFile {
       const ideas: ProjectEntry['ideas'] = {};
 
       for (const [ideaName, ideaEntry] of Object.entries(projEntry.ideas)) {
-        ideas[ideaName] = {
+        const entry: IdeaEntry = {
           ...ideaEntry,
           lifecycle: lifecycleDisplayForIdea(ideaEntry),
         };
+
+        // Deep-link target for the checkpoint panel. Derived per request rather
+        // than stored, so a renamed or deleted plan can never leave a dead link
+        // behind in priorities.json.
+        if (entry.checkpoint && harnessRoot) {
+          const planPath = buildPlanPathFor(harnessRoot, initName, projName, ideaName);
+          if (planPath) {
+            entry.checkpoint = { ...entry.checkpoint, buildPlanPath: planPath };
+          }
+        }
+
+        ideas[ideaName] = entry;
       }
 
       projects[projName] = { ...projEntry, ideas };

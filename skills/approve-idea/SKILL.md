@@ -64,4 +64,3 @@ Run all steps in order.
 - Do not modify unrelated ideas.
 - Do not move to `Done` from approval flow unless the user explicitly says the work is complete.
 - If required files are missing, stop and report what is missing before editing.
-- Do **not** edit `ideas.md` or `DASHBOARD.md`.

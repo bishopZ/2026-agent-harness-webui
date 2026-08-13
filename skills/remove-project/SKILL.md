@@ -103,7 +103,7 @@ Once all ideas are resolved:
 4. Remove `00-how-to-use.md` in that project folder when the folder is being deleted.
 5. Set initiative `lastWork` and root `updated` when this session involved substantive changes.
 
-Do **not** edit `ideas.md` or `DASHBOARD.md`. Closed projects live in `project-history.md`, not in a live markdown projects table.
+Closed projects live in `project-history.md`, not in a live markdown projects table.
 
 ## Step 5 - Wiki and registry hygiene
 

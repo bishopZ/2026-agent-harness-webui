@@ -4,7 +4,7 @@ Cross-stage operating rules that apply to every lifecycle stage (`IDEA_LIFECYCLE
 
 Stages say **what** to do at each step. Rules say **how** to do it well regardless of step. When a stage template and a rule appear to conflict, the rule wins: rules encode the non-negotiable discipline that makes every stage trustworthy.
 
-## The six rules
+## The seven rules
 
 | Rule | Core idea | When it bites hardest |
 |---|---|---|

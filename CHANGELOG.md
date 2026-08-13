@@ -20,17 +20,17 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ### Changed
 
-- **Breaking (demo harness):** `priorities.json` is the single registry; removed `DASHBOARD.md` and per-initiative `ideas.md`. Agents and skills update `priorities.json` + artifact folders only.
+- **Breaking (demo harness):** `priorities.json` is the single registry; removed the root markdown dashboard and per-initiative markdown idea lists. Agents and skills update `priorities.json` + artifact folders only.
 - Web UI approval queue reads `lifecycle: "In Review"` from `priorities.json` (fixes drift when markdown registries were updated without the sidecar).
 - Reconcile infers `In Review` from brief artifacts when adding new idea keys.
 - **Build checkpoint discipline.** `SYSTEM_OVERVIEW.md` and `IDEA_LIFECYCLE.md` (Stage 6) now require Build Plan checkpoints to act as agent session boundaries with a closure checklist (`verification_log.md`, that idea's entry in `priorities.json`, `wiki/log.md`). Aligns with the upstream Agent Harness `rules/incremental-execution.md`.
 - Clarified project language across system docs and skills: projects now use **Closed Projects** (recorded in `project-history.md`) instead of **Dropped Projects**.
 - Updated project and initiative removal guidance to prefer **remove/close** wording, while keeping idea-level `Done` and `Dropped` `lifecycle` values unchanged.
-- **Synced Web UI harness Markdown and folder structure to the main Agent Harness v2.0.0:** flat project layout (no `projects/` container folder), per-initiative `history/` folders, Build checkpoint discipline, and the `README.md` version badge — all adapted for `priorities.json` in place of `DASHBOARD.md` / `ideas.md`.
+- **Synced Web UI harness Markdown and folder structure to the main Agent Harness v2.0.0:** flat project layout (no `projects/` container folder), per-initiative `history/` folders, Build checkpoint discipline, and the `README.md` version badge — all adapted for `priorities.json` as the registry.
 
 ### Removed
 
-- `DASHBOARD.md` and `initiatives/*/ideas.md` from this harness repo (use `priorities.json` instead).
+- Root markdown dashboard and per-initiative markdown idea lists from this harness repo (use `priorities.json` instead).
 
 ---
 
@@ -43,9 +43,9 @@ Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ### Changed
 
-- **BREAKING — project folder layout:** Project folders are **direct children of each initiative** at `initiatives/[Initiative Name]/[Project Name]/` (alongside `wiki/`, `sources/`, `outputs/`, `history/`, and — in this Web UI harness — `priorities.json` in place of `ideas.md`). The old `initiatives/.../projects/[Project Name]/` layout is removed. The shipped defaults (`My Company`, `My Personal Life`, `My Hobby`) move `General` from `projects/General/` to `General/`. **Migration:** for existing forks, run `git mv "initiatives/<Initiative>/projects/<Project>" "initiatives/<Initiative>/<Project>"` for each project folder, then remove empty `initiatives/<Initiative>/projects/` if present; update any project keys in `priorities.json` and any links in the wiki that pointed at the old path.
+- **BREAKING — project folder layout:** Project folders are **direct children of each initiative** at `initiatives/[Initiative Name]/[Project Name]/` (alongside `wiki/`, `sources/`, `outputs/`, `history/`, and `priorities.json` as the registry). The old `initiatives/.../projects/[Project Name]/` layout is removed. The shipped defaults (`My Company`, `My Personal Life`, `My Hobby`) move `General` from `projects/General/` to `General/`. **Migration:** for existing forks, run `git mv "initiatives/<Initiative>/projects/<Project>" "initiatives/<Initiative>/<Project>"` for each project folder, then remove empty `initiatives/<Initiative>/projects/` if present; update any project keys in `priorities.json` and any links in the wiki that pointed at the old path.
 - `README.md` — synced with upstream system docs, including the optional `repo/` submodule workflow and folder structure; version badge `2.0.0`.
-- `SYSTEM_OVERVIEW.md` — full file tree with optional `repo/`, key rules for submodule code vs harness Markdown, and where implementation work goes when `repo/` exists; registry references point at `priorities.json`, not `DASHBOARD.md` / `ideas.md`.
+- `SYSTEM_OVERVIEW.md` — full file tree with optional `repo/`, key rules for submodule code vs harness Markdown, and where implementation work goes when `repo/` exists; registry references point at `priorities.json`.
 - `IDEA_LIFECYCLE.md` — Build stage aligned with `repo/` submodules; Build Plan / slice execution / build artifacts paths use `initiatives/.../[Project Name]/[Idea Name]/` (flat).
 - `skills/add-project/SKILL.md` — steps for `[Project Name]/`, optional `repo/` + `00-how-to-use.md` **Repo** section.
 

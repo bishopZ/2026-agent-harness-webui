@@ -35,7 +35,7 @@ export function createDiscoverRouter(harnessRoot: string): Router {
   router.get('/', async (_req, res) => {
     try {
       const sidecar = await reconcile(harnessRoot);
-      res.json(buildDiscoverResponse(sidecar));
+      res.json(buildDiscoverResponse(sidecar, harnessRoot));
     } catch (err) {
       console.error('[/api/discover] Reconcile error:', err);
       res.status(500).json({ error: 'Failed to discover harness' });

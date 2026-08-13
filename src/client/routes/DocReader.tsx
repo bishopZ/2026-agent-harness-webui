@@ -41,9 +41,9 @@ export function DocReader() {
         <Sidebar />
         {/* Capture link clicks so React Router handles /doc?path= without reload */}
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions */}
-        <div style={{ flex: 1, overflowY: 'auto' }} onClick={handleArticleClick}>
+        <main style={contentStyle} onClick={handleArticleClick}>
           <MarkdownView filePath={currentPath} />
-        </div>
+        </main>
       </div>
     </div>
   );
@@ -72,5 +72,12 @@ const homeLink: React.CSSProperties = {
 const layoutStyle: React.CSSProperties = {
   display: 'flex',
   flex: 1,
+  minHeight: 0,
   overflow: 'hidden',
+};
+
+const contentStyle: React.CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  overflowY: 'auto',
 };

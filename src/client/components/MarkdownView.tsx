@@ -79,7 +79,5 @@ const articleStyle: React.CSSProperties = {
   fontSize: '0.95rem',
   lineHeight: '1.65',
   color: '#111827',
-  overflowY: 'auto',
-  height: '100vh',
   boxSizing: 'border-box',
 };

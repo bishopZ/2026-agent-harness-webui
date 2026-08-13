@@ -20,7 +20,7 @@ A zero-stakes company initiative idea used to exercise capture, brief drafting, 
 
 ## Problem statement
 
-My Company has no active ideas in flight and an empty approval queue. That makes it hard to validate end-to-end lifecycle behavior (status transitions, dashboard rows, links from `ideas.md` to artifacts) without risking a real strategic bet. Agents and owners need a **safe exemplar** that follows the same gates as production ideas but carries no revenue or reputation downside if the idea is revised, paused, or dropped after Pressure Test.
+My Company has no active ideas in flight and an empty approval queue. That makes it hard to validate end-to-end lifecycle behavior (status transitions, registry rows, links from `priorities.json` to artifacts) without risking a real strategic bet. Agents and owners need a **safe exemplar** that follows the same gates as production ideas but carries no revenue or reputation downside if the idea is revised, paused, or dropped after Pressure Test.
 
 *`ASSUMPTION`: Running a deliberately thin “example” idea is an acceptable use of dashboard and wiki attention; the alternative (waiting for a real bet) delays harness and process validation.*
 
@@ -28,7 +28,7 @@ My Company has no active ideas in flight and an empty approval queue. That makes
 
 ## Hypothesis
 
-If we add **Example Idea** under **General**, draft this brief, and park it in **In Review**, then approve → Pressure Test will confirm that My Company’s tables, paths, and `DASHBOARD.md` queue stay aligned. That reduces friction when the first real company idea enters the same pipeline.
+If we add **Example Idea** under **General**, draft this brief, and park it in **In Review**, then approve → Pressure Test will confirm that My Company’s registry rows, paths, and Web UI approval queue stay aligned. That reduces friction when the first real company idea enters the same pipeline.
 
 ---
 
@@ -36,7 +36,7 @@ If we add **Example Idea** under **General**, draft this brief, and park it in *
 
 **Primary:** You (initiative owner) and agents operating the cowork lifecycle or Agent Harness Web UI — anyone who needs to see a complete row + artifact + approval entry without ambiguity.
 
-**Secondary:** Future collaborators who read `ideas.md` and need a concrete pattern for how General-bucket ideas are named and linked.
+**Secondary:** Future collaborators who read `priorities.json` and need a concrete pattern for how General-bucket ideas are named and linked.
 
 ---
 
@@ -48,8 +48,8 @@ The Agent Harness Web UI and priority workspace are being exercised against real
 
 ## Success criteria
 
-1. `ideas.md` lists **Example Idea** with **Status** `In Review`, a link to this brief, and a clear next step pointing at Pressure Test.
-2. `DASHBOARD.md` **Awaiting your approval** includes a row for My Company / General / Example Idea with a working brief link.
+1. `priorities.json` lists **Example Idea** with `lifecycle` `In Review`, a `reviewDocumentPath` to this brief, and a clear next step pointing at Pressure Test.
+2. The Web UI approval queue includes a row for My Company / General / Example Idea with a working brief link.
 3. After you approve the brief, `02_pressure_test.md` can be drafted without renaming folders or fixing broken relative links.
 4. *(Optional)* A short `outputs/example-idea-lessons.md` exists if Evaluation concludes the exercise should be documented for reuse.
 

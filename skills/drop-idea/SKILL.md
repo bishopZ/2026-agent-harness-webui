@@ -66,7 +66,7 @@ Run in order.
 | **Date** | `YYYY-MM-DD` |
 | **Reason** | Clear rationale, plus links to archive bundle and any wiki page |
 
-Do **not** create or edit `ideas.md` or `DASHBOARD.md`. Long-form Dropped history lives only in `history/dropped-history.md`.
+Long-form Dropped history lives only in `history/dropped-history.md`.
 
 ### 5. Links
 
@@ -95,4 +95,3 @@ Update initiative `lastWork` in `priorities.json` when appropriate.
 - **Dropped** ideas stay on file for reference in `history/dropped-history.md` and as `lifecycle: "Dropped"` in `priorities.json`. Do not erase history without explicit user request beyond normal archive moves.
 - Keep **Project** and **Idea** names aligned with folders and `priorities.json` keys.
 - Do not use this skill for **Done** (use **complete-idea**) or for **On Hold** (keep the entry and set `lifecycle` to `On Hold` per `IDEA_LIFECYCLE.md`).
-- Do **not** edit `ideas.md` or `DASHBOARD.md`.

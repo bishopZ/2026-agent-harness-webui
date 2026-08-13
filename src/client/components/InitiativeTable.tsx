@@ -8,14 +8,28 @@
  *                          never appear in the /doc route.
  */
 import { useState } from 'react';
+import { isOwnerBlocked } from '../utils/checkpointSort.js';
 
 // ─── Types (mirrored from server sidecarTypes.ts, read-only on client) ────────
+
+interface CheckpointEntry {
+  current: string;
+  index: number;
+  total: number;
+  status: string;
+  label?: string;
+  reason?: string;
+  asOf?: string;
+  evidence?: string;
+  buildPlanPath?: string;
+}
 
 interface IdeaEntry {
   priority: string;
   lifecycle: string;
   lastUpdated: string;
   notes: string;
+  checkpoint?: CheckpointEntry;
 }
 
 interface ProjectEntry {
@@ -249,6 +263,7 @@ export function InitiativeTable({ data, onUpdate, saving = new Set() }: Props) {
                                       <th style={thStyle}>Idea</th>
                                       <th style={thStyle}>Priority</th>
                                       <th style={thStyle}>Lifecycle</th>
+                                      <th style={thStyle}>Checkpoint</th>
                                       <th style={thStyle}>Last Updated</th>
                                     </tr>
                                   </thead>
@@ -279,6 +294,12 @@ export function InitiativeTable({ data, onUpdate, saving = new Set() }: Props) {
                                             </td>
                                             <td style={tdStyle}>
                                               <LifecycleBadge value={idea.lifecycle} />
+                                            </td>
+                                            <td style={tdStyle}>
+                                              <CheckpointCell
+                                                checkpoint={idea.checkpoint}
+                                                lifecycle={idea.lifecycle}
+                                              />
                                             </td>
                                             <td style={{ ...tdStyle, ...monoStyle }}>
                                               {idea.lastUpdated}
@@ -315,6 +336,80 @@ function PriorityBadge({ value }: { value: string }) {
     value === 'Low' ? '#6b7280' :
     '#374151';
   return <span style={{ color, fontWeight: 500 }}>{value}</span>;
+}
+
+/** Status → colour. Owner-blocked states are the ones worth spotting at a glance. */
+const CHECKPOINT_COLORS: Record<string, string> = {
+  'In Review': '#b45309',
+  Ready: '#0369a1',
+};
+
+/**
+ * Which checkpoint is this idea on?
+ *
+ * Renders "C · 3/5" plus the gate state. Blank for ideas that never reached a
+ * Build Plan; an explicit "no checkpoint data" marker for Build-stage ideas
+ * missing the field, since that gap is itself the thing worth noticing.
+ */
+function CheckpointCell({
+  checkpoint,
+  lifecycle,
+}: {
+  checkpoint?: CheckpointEntry;
+  lifecycle: string;
+}) {
+  const isBuildish =
+    lifecycle === 'Build' || lifecycle === 'Build Plan' || lifecycle === 'In Review';
+
+  if (!checkpoint) {
+    return isBuildish ? (
+      <span
+        style={{ color: '#b91c1c', fontSize: '0.75rem' }}
+        title="This idea is at Build but has no checkpoint recorded in priorities.json. Run the health-check skill."
+      >
+        not recorded
+      </span>
+    ) : (
+      <span style={{ color: '#d1d5db' }}>—</span>
+    );
+  }
+
+  const color = CHECKPOINT_COLORS[checkpoint.status] ?? '#374151';
+  const isBlocking = isOwnerBlocked(checkpoint.status);
+  const tooltip = [
+    checkpoint.label && `Checkpoint ${checkpoint.current} — ${checkpoint.label}`,
+    checkpoint.reason,
+    checkpoint.asOf && `As of ${checkpoint.asOf}`,
+    checkpoint.evidence,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: '0.35rem' }} title={tooltip}>
+      <span
+        style={{
+          fontFamily: 'monospace',
+          fontWeight: 700,
+          fontSize: '0.75rem',
+          color: '#111827',
+          backgroundColor: '#f3f4f6',
+          border: '1px solid #e5e7eb',
+          borderRadius: '3px',
+          padding: '0 0.3rem',
+        }}
+      >
+        {checkpoint.current}
+      </span>
+      <span style={{ ...monoStyle, fontSize: '0.7rem' }}>
+        {checkpoint.index}/{checkpoint.total}
+      </span>
+      <span style={{ color, fontWeight: isBlocking ? 600 : 400, fontSize: '0.75rem' }}>
+        {isBlocking ? '⏸ ' : ''}
+        {checkpoint.status}
+      </span>
+    </span>
+  );
 }
 
 function LifecycleBadge({ value }: { value: string }) {

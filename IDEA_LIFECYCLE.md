@@ -345,7 +345,7 @@ Before any construction begins, The Agent decomposes the Design into a **Build P
 - **Overview** - a paragraph restating what will be built, from the PRD and Design
 - **Architecture decisions carried forward** - a short index of ADRs from Design (or new ones emerging now)
 - **Task list, ordered** - each slice follows the task structure below
-- **Checkpoints** - explicit gates after every 2–3 slices where the system must be verified end-to-end. Each checkpoint in the markdown **must** include: **Hard stop for agents** (which task must not start without an explicit user continuation or owner approval) and a **Closure checklist** (`verification_log.md`, that idea's entry in `priorities.json`, `wiki/log.md` if wiki changed). Optional: **Owner gate** when the next slice touches payments, deploy, or external commitments.
+- **Checkpoints** - explicit gates after every 2–3 slices where the system must be verified end-to-end. Each checkpoint in the markdown **must** include: **Hard stop for agents** (which task must not start without an explicit user continuation or owner approval) and a **Closure checklist** (`verification_log.md`, that idea's entry in `priorities.json` including its `checkpoint` object, `wiki/log.md` if wiki changed). Optional: **Owner gate** when the next slice touches payments, deploy, or external commitments.
 - **Risks and mitigations** - the risks from Design, refreshed, with mitigations mapped to specific slices
 - **Open questions** - unknowns that must be resolved before or during Build, each with a proposed path to an answer
 - **Parallelization notes** - which slices can safely be done in parallel, which must be sequential, which need coordination (e.g. a shared contract defined first)
@@ -385,7 +385,7 @@ Before any construction begins, The Agent decomposes the Design into a **Build P
 **Closure checklist:**
 
 - [ ] `05_build/verification_log.md` — tasks through Task N verified this session.
-- [ ] `priorities.json` — this idea's entry updated through Checkpoint X (`lifecycle`, `lastUpdated`, `notes` with **Next:** Task N+1).
+- [ ] `priorities.json` — this idea's entry updated through Checkpoint X (`lifecycle`, `lastUpdated`, `notes` with **Next:** Task N+1, and the `checkpoint` object — see `docs/priorities-registry.md` **Build checkpoint object**; it is the sole data source for the Build Checkpoints table).
 - [ ] `wiki/log.md` — updated if applicable.
 
 **Human / next session:** [Optional: what you'll do next or owner-only gate text.]
