@@ -9,7 +9,6 @@ Stages say **what** to do at each step. Rules say **how** to do it well regardle
 | Rule | Core idea | When it bites hardest |
 |---|---|---|
 | [`evidence-and-verification.md`](evidence-and-verification.md) | "Seems right" is never sufficient. Every claim and every artifact must be backed by evidence and explicit verification. | Research synthesis, Build, Evaluation, Growth retrospectives |
-| [`execution-environment.md`](execution-environment.md) | Know what the shell can and cannot run. A slice needing an absent capability is authored in `repo/` and handed to the owner in the checkpoint, never skipped or blocked on a guess. | Build slices for native/iOS/GPU targets; any next-idea run |
 | [`incremental-execution.md`](incremental-execution.md) | Break work into thin vertical slices. Simplicity first. Keep the system working at every step. | Build, Launch, Growth experiments |
 | [`context-engineering.md`](context-engineering.md) | Feed the agent the right information at the right time. Rules files and the wiki are the highest-leverage persistent context. | Every session; especially when output quality drifts |
 | [`decision-records.md`](decision-records.md) | Document *why* decisions are made — context, alternatives, trade-offs — not only what. | Design, Build, Launch |
