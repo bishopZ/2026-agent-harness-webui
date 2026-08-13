@@ -11,7 +11,7 @@ Do not use Trello. Use only files in this repo.
 Follow the initiative and idea system in this repo.
 Treat SYSTEM_OVERVIEW.md as the source of truth for process.
 Use IDEA_LIFECYCLE.md for lifecycle stages, gates, and templates.
-Use [`docs/priorities-registry.md`](../../docs/priorities-registry.md) and root `priorities.json` as the registry (not `ideas.md` / `DASHBOARD.md`).
+Use [`docs/priorities-registry.md`](../../docs/priorities-registry.md) and root `priorities.json` as the registry.
 
 If the task is to take the next idea, prioritize, or choose what to work on without a named idea:
 - Read `priorities.json` for initiative `tier`, `lastWork`, project `priority`, and idea `priority` / `lifecycle` / `notes`.
@@ -41,7 +41,7 @@ Do not substitute a narrative report for phase work.
 - Never create a standalone file whose purpose is to document selection, scoring, tie-breakers, or a "next idea report" (for example `next-idea-report-*.md` or any similar summary-only artifact).
 - A scoring table or "winner" write-up is not deliverable output. Put a short outcome summary in the chat message only after files and registry updates are done.
 - If phase work is blocked (missing inputs, approval needed, or nothing eligible to select), say so in chat. Do not write a repo markdown file to explain that. Only update `priorities.json` or other existing process files when the system actually calls for it.
-- **A slice that needs a capability your environment lacks is NOT "blocked" — it is a split-execution hand-off.** Your shell is Linux with Node and Python but no Apple/Xcode/iOS/MLX/GPU/camera/browser (see `rules/execution-environment.md`). When a slice needs one of those: (1) author everything authorable in `repo/` (real source, config, files — untested-because-unbuildable is fine); (2) verify what you can here (`tsc`, unit/logic tests, greps, JSON validation) and record it in `05_build/verification_log.md`; (3) write the **exact owner run-steps** (commands, tools to install, permissions to grant, what to capture) into the **checkpoint section of `05_build_plan.md`** — not into chat, not into a side report; (4) set the idea `In Review` with `checkpoint.status: "In Review"` and a `reason` naming the next owner action. Do **not** skip the idea, and do **not** do a different idea instead. A blocker you did not write into a repo file does not exist.
+- **A slice that needs a capability your environment lacks is NOT "blocked" — it is a split-execution hand-off.** Your shell is Linux with Node and Python but no Apple/Xcode/iOS/MLX/GPU/camera/browser When a slice needs one of those: (1) author everything authorable in `repo/` (real source, config, files — untested-because-unbuildable is fine); (2) verify what you can here (`tsc`, unit/logic tests, greps, JSON validation) and record it in `05_build/verification_log.md`; (3) write the **exact owner run-steps** (commands, tools to install, permissions to grant, what to capture) into the **checkpoint section of `05_build_plan.md`** — not into chat, not into a side report; (4) set the idea `In Review` with `checkpoint.status: "In Review"` and a `reason` naming the next owner action. Do **not** skip the idea, and do **not** do a different idea instead. A blocker you did not write into a repo file does not exist.
 
 When the phase output is complete, move it into review:
 - Set `lifecycle` to **`In Review`** in `priorities.json`.
@@ -51,7 +51,7 @@ When the phase output is complete, move it into review:
 - Set the artifact `**Status:** In Review`.
 - **Build stage only — maintain the `checkpoint` object.** When the phase you finished is at or entering Build (a `05_build_plan.md` was drafted or approved, or any Build checkpoint was reached this session), create or update the `checkpoint` object on that idea's entry in `priorities.json`. This object is the **only** data source for the Web UI **Build Checkpoints** table — an idea in Build without it is invisible there. Fields and lifecycle rules: see `docs/priorities-registry.md` **Build checkpoint object**. Remove the object only when the build completes or its plan is superseded.
 
-Do **not** create or edit `ideas.md` or `DASHBOARD.md`.
+Registry is `priorities.json` only. Do not add a markdown registry file.
 
 Use valid lifecycles and priorities from SYSTEM_OVERVIEW.md.
 Read USER.md for preferences and context.

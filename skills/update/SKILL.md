@@ -88,7 +88,7 @@ If the initiative’s existing pages use a lighter header style (for example bol
 
 3. **Chat.** Short summary for the user: what was newest, what changed in the wiki, where files landed, and what is still open.
 
-This skill does **not** require editing `priorities.json` unless the ingest session also advanced lifecycle work (use the appropriate lifecycle skill then). Do **not** edit `ideas.md` or `DASHBOARD.md`.
+This skill does **not** require editing `priorities.json` unless the ingest session also advanced lifecycle work (use the appropriate lifecycle skill then).
 
 ## Contradictions and scope
 

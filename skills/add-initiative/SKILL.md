@@ -15,7 +15,7 @@ Do not use Trello. Use only files in this repo.
 
 Follow `SYSTEM_OVERVIEW.md` for folder layout, naming conventions, and wiki init rules. Follow [`docs/priorities-registry.md`](../../docs/priorities-registry.md) for the registry.
 
-Register in **`priorities.json`**; do **not** create `ideas.md` or `DASHBOARD.md`.
+Register in **`priorities.json`** only.
 
 ## Inputs
 
@@ -44,7 +44,7 @@ initiatives/[Initiative Name]/
     log.md
 ```
 
-Do **not** create a `projects/` container or `ideas.md`.
+Do **not** create a `projects/` container.
 
 ## Files to write
 
@@ -135,5 +135,4 @@ Insert the initiative so its `tier` fits the intended stack position (higher tie
 
 ## Guardrails
 
-- Do **not** create or edit `ideas.md` or `DASHBOARD.md`.
 - Do **not** nest projects under `projects/` — use flat `initiatives/[Name]/[Project]/`.

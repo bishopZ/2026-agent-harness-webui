@@ -66,7 +66,7 @@ Run in order.
 | **Completed** | `YYYY-MM-DD` |
 | **Outcome** | User-facing summary, links to finished deliverables in `outputs/`, and a link to the archive bundle |
 
-Do **not** create or edit `ideas.md` or `DASHBOARD.md`. Long-form Done history lives only in `history/done-history.md`.
+Long-form Done history lives only in `history/done-history.md`.
 
 ### 5. Artifacts hygiene
 
@@ -95,4 +95,3 @@ If this completion was substantive, set that initiative’s `lastWork` in `prior
 - **Project** and **Idea** strings must stay aligned with folder names and `priorities.json` keys.
 - Do not delete wiki pages. Retire with `wiki/.archive/` only when a page is obsolete, per `SYSTEM_OVERVIEW.md`.
 - Do not mark **Done** when the user meant **On Hold** or **Dropped**.
-- Do **not** edit `ideas.md` or `DASHBOARD.md`.

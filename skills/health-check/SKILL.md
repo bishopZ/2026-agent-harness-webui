@@ -13,7 +13,7 @@ Do not use Trello. Use only files in this repo.
 Treat [SYSTEM_OVERVIEW.md](../../SYSTEM_OVERVIEW.md) as the source of truth for process.
 Use valid idea **lifecycle** and **priority** labels from SYSTEM_OVERVIEW.md and [`docs/priorities-registry.md`](../../docs/priorities-registry.md).
 
-Registry source: **`priorities.json`**. Approval queue: ideas with `lifecycle: "In Review"` (Web UI). Do **not** edit `ideas.md` or `DASHBOARD.md`.
+Registry source: **`priorities.json`**. Approval queue: ideas with `lifecycle: "In Review"` (Web UI). Do not add a markdown registry file.
 
 ## When to use
 

@@ -45,7 +45,7 @@ If initiative or idea title is ambiguous, ask once. Do not invent initiatives.
 | 5 | For backlog-only captures, set `lifecycle: "Backlog"` and a one-line `notes`. |
 | 6 | Optionally set initiative `lastWork` to today in `priorities.json` when this session counts toward recency. |
 
-Do **not** create or edit `ideas.md` or `DASHBOARD.md` (removed; registry is `priorities.json` only).
+Registry is `priorities.json` only.
 
 ## priorities.json idea entry
 

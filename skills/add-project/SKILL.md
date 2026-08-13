@@ -37,7 +37,7 @@ Do not invent initiatives. Do not create a project that already exists in `prior
 | 4 | **If the project has an associated GitHub repo:** create an empty `repo/` subfolder with a `.gitkeep` inside. Add the **Repo** section to `00-how-to-use.md` (see below). Do not attempt to configure the submodule — tell the user to run `git submodule add <repo-url> "initiatives/[Initiative]/[Project Name]/repo"` from the repo root. |
 | 5 | Optionally set initiative `lastWork` to today in `priorities.json` when this is a significant structural addition. |
 
-Do **not** edit `ideas.md` or `DASHBOARD.md`.
+Registry is `priorities.json` only.
 
 ## priorities.json project entry
 

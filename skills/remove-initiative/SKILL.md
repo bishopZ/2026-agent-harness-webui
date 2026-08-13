@@ -80,8 +80,6 @@ Wait for the user's choice before proceeding.
 2. If `AGENTS.md` lists this initiative, remove that row.
 3. Reminder to update `USER.md` if the initiative was listed there.
 
-Do **not** edit `ideas.md` or `DASHBOARD.md`.
-
 ## Completion summary (return to user)
 
 - Initiative name removed.

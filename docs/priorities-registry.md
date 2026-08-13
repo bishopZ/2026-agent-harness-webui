@@ -89,7 +89,7 @@ The optional `checkpoint` object on an idea entry is the **only** data source fo
 3. Set initiative `lastWork` to today when the session counts as substantive progress.
 4. Set brief front matter `**Status:** In Review` to match.
 
-Do **not** create `ideas.md` or `DASHBOARD.md` rows.
+Registry is `priorities.json` only. Do not add a markdown registry file.
 
 ## Approve idea
 
@@ -113,7 +113,7 @@ Do **not** create `ideas.md` or `DASHBOARD.md` rows.
 
 ## Add initiative
 
-1. Create folder layout under `initiatives/[Name]/`: `General/`, `history/` (`done-history.md`, `dropped-history.md`), `project-history.md`, `sources/`, `outputs/`, `wiki/` — **no** `ideas.md`, **no** `projects/` container.
+1. Create folder layout under `initiatives/[Name]/`: `General/`, `history/` (`done-history.md`, `dropped-history.md`), `project-history.md`, `sources/`, `outputs/`, `wiki/` — **no** markdown registry file, **no** `projects/` container.
 2. Add initiative entry to `priorities.json` with `tier`, `lastWork`, and default `General` project.
 
 ## Done / Dropped / Closed Projects
@@ -138,4 +138,4 @@ If legacy `DASHBOARD.md` / `ideas.md` exist, run once:
 npm run migrate-registry
 ```
 
-Then delete the markdown registry files. If folders still use `initiatives/.../projects/[Project]/`, move them to the flat layout first.
+Then delete them. If folders still use `initiatives/.../projects/[Project]/`, move them to the flat layout first.

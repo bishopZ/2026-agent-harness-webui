@@ -101,7 +101,7 @@ Agents (human or AI) reach for the same five or six shortcuts every time. Naming
 
 | Rationalization | Reality |
 |---|---|
-| "I can't build/run this in my environment, so the idea is blocked" | You can still write the code and the exact run steps. Author the slice in `repo/`, verify what the shell supports, and hand the build/run to the owner in the checkpoint (`rules/execution-environment.md`). An idea is only blocked when even authoring is impossible. |
+| "I can't build/run this in my environment, so the idea is blocked" | You can still write the code and the exact run steps. Author the slice in `repo/`, verify what the shell supports, and hand the build/run to the owner in the checkpoint. An idea is only blocked when even authoring is impossible. |
 | "The blocker is obvious — I'll just note it in chat" | A blocker that is not written into a repo file does not exist. It vanishes at the end of the session and the next run rediscovers nothing. Write the owner step into the checkpoint and set the idea `In Review` with a `reason`. |
 | "This top idea is hard, I'll take an easier one this run" | next-idea executes the **top eligible** idea. Swapping to something easier because the top pick needs a build you can't run locally is silent scope-dodging. If you truly must deviate, record why in that idea's `notes` — never just skip it. |
 | "It's `Ready`, but it really needs the owner, so I'll work around it" | Then the status is wrong. `Ready` means the agent can take the next slice unaided; if that's false, fix the status to `In Review` with the owner step. Routing around a wrong signal leaves it wrong for the next run. |
@@ -119,6 +119,5 @@ If the answer to 3 is "go back," go back. Approval given on a rationalization is
 ## See also
 
 - [`evidence-and-verification.md`](evidence-and-verification.md)
-- [`execution-environment.md`](execution-environment.md) — what the shell can and cannot run, and the split-execution hand-off
 - [`red-flags.md`](red-flags.md) — the concrete trouble signals that often follow a rationalization
 - [`agents/`](../agents) — specialist profiles trained to push back when they smell a rationalization
