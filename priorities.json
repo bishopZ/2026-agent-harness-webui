@@ -10,6 +10,18 @@
           "priority": "Medium",
           "purpose": "Default bucket for ideas that do not belong to another project yet.",
           "ideas": {}
+        },
+        "One bus ride": {
+          "priority": "High",
+          "purpose": "A free, no-account static web app that turns one MetroRapid 801 ride into a complete, printable half-day outing.",
+          "ideas": {
+            "One bus ride": {
+              "priority": "High",
+              "lifecycle": "Growth",
+              "lastUpdated": "2026-09-12",
+              "notes": "Shipped v1 (outputs/app/), all 8 PRD acceptance criteria pass (see 05_build/verification_log.md). Evaluation GO, Launch and Marketing pack executed 2026-09-12. In Growth: Experiment 1 (corridor fit) and Experiment 2 (disclaimer prominence) queued in 09_growth_log.md."
+            }
+          }
         }
       }
     },

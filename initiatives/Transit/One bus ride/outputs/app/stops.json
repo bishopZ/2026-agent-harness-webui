@@ -1,0 +1,50 @@
+{
+  "corridor": "MetroRapid 801",
+  "lastVerified": "2026-09-11",
+  "stops": [
+    {
+      "id": "crestview",
+      "name": "North Lamar & Justin Ln (Crestview)",
+      "pois": [
+        { "name": "Crestview/Brentwood neighborhood strip", "category": "shops & coffee", "walkMinutes": 5, "description": "A walkable stretch of small, independent shops, coffee, and record stores just off the corridor." }
+      ]
+    },
+    {
+      "id": "north-loop",
+      "name": "North Loop",
+      "pois": [
+        { "name": "North Loop shopping strip", "category": "shops & food", "walkMinutes": 4, "description": "A short, walkable strip of vintage shops and casual food just west of the stop." }
+      ]
+    },
+    {
+      "id": "ut-west-mall",
+      "name": "Guadalupe & MLK (UT West Mall)",
+      "pois": [
+        { "name": "University of Texas West Mall & Littlefield Fountain", "category": "public landmark", "walkMinutes": 6, "description": "Open, walkable university grounds with a well-known public fountain and mall." },
+        { "name": "Guadalupe St (\"The Drag\")", "category": "shops & food", "walkMinutes": 2, "description": "A dense strip of shops and casual food across from campus." }
+      ]
+    },
+    {
+      "id": "capitol",
+      "name": "Congress Ave & 11th (Capitol)",
+      "pois": [
+        { "name": "Texas State Capitol grounds", "category": "public landmark", "walkMinutes": 5, "description": "Public state capitol building and grounds, open for walking and self-guided viewing." },
+        { "name": "Congress Avenue Bridge", "category": "public landmark", "walkMinutes": 10, "description": "Public bridge over Lady Bird Lake, known for its evening bat colony in warmer months." }
+      ]
+    },
+    {
+      "id": "bouldin",
+      "name": "South 1st & Bouldin",
+      "pois": [
+        { "name": "Lady Bird Lake Hike-and-Bike Trail access", "category": "park", "walkMinutes": 6, "description": "Public trail along the lake, walkable in either direction with no set route required." }
+      ]
+    },
+    {
+      "id": "soco",
+      "name": "South Congress (SoCo)",
+      "pois": [
+        { "name": "South Congress Avenue", "category": "shops & food", "walkMinutes": 1, "description": "A well-known, walkable strip of shops, food, and street life on both sides of the avenue." }
+      ]
+    }
+  ]
+}

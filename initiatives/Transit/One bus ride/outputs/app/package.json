@@ -1,0 +1,6 @@
+{
+  "name": "one-bus-ride-app",
+  "private": true,
+  "type": "commonjs",
+  "description": "Static app, no build step. This file exists only so Node's module system (require/module.exports) resolves correctly for the verification sweep in ../../05_build/verification_log.md; browsers ignore it entirely."
+}

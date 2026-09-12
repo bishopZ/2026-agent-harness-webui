@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>One Bus Ride — a whole outing on one MetroRapid 801 ride</title>
+<meta name="description" content="Pick a direction and how much time you have. Get a bounded, printable plan for one ride on Austin's MetroRapid 801 — no account, no live data, no planning." />
+
+<!-- Open Graph / share meta tags (FR-10) -->
+<meta property="og:title" content="One Bus Ride" />
+<meta property="og:description" content="One MetroRapid 801 ride, planned for you. Board here, ride this far, do these things, catch the bus back." />
+<meta property="og:image" content="og-image.svg" />
+<meta property="og:type" content="website" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<!-- Minimal, cookie-free pageview counter — see 05_build/decisions.md ADR-transit-20260911-03.
+     Vendor/site code intentionally left as a placeholder for the operator to fill in at deploy time. -->
+<script data-goatcounter="https://one-bus-ride.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+  <header>
+    <h1>One Bus Ride</h1>
+    <p class="tagline">No planning, no live data, just one ride and a plan.</p>
+  </header>
+
+  <main>
+    <form id="plan-form">
+      <label for="direction">Direction</label>
+      <select id="direction" name="direction">
+        <option value="southbound">Southbound (North Lamar → South Congress)</option>
+        <option value="northbound">Northbound (South Congress → North Lamar)</option>
+      </select>
+
+      <label for="start">Board at</label>
+      <select id="start" name="start"></select>
+
+      <label for="budget">How much time do you have?</label>
+      <select id="budget" name="budget">
+        <option value="short">Short (~30 min, next stop or two)</option>
+        <option value="medium" selected>Medium (~60-90 min)</option>
+        <option value="long">Long (~2+ hours)</option>
+      </select>
+
+      <div class="button-row">
+        <button type="submit">Plan my ride</button>
+        <button type="button" id="surprise-me">Surprise me</button>
+      </div>
+    </form>
+
+    <section id="itinerary" aria-live="polite"></section>
+
+    <noscript>
+      <section id="itinerary-fallback">
+        <h2>Your one bus ride</h2>
+        <p class="direction">Southbound (North Lamar → downtown → South Congress)</p>
+        <p><strong>Board:</strong> North Lamar &amp; Justin Ln (Crestview)</p>
+        <p><strong>Alight:</strong> South Congress (SoCo)</p>
+        <h3>Things to do near South Congress (SoCo)</h3>
+        <ul>
+          <li><strong>South Congress Avenue</strong> (shops &amp; food, ~1 min walk) &mdash; A well-known, walkable strip of shops, food, and street life on both sides of the avenue.</li>
+        </ul>
+        <p>When you're done, catch the 801 back the way you came. (JavaScript is off, so this is a fixed default plan &mdash; turn on JavaScript to customize direction, stop, and time budget.)</p>
+      </section>
+    </noscript>
+
+    <footer id="disclaimer">
+      <p><strong>Not affiliated with Capital Metro.</strong> Stops, points of interest, and schedules can change. This plan is static, not live &mdash; verify today's MetroRapid 801 times at
+        <a href="https://www.capmetro.org/" target="_blank" rel="noopener">capmetro.org</a> before you go.
+      </p>
+      <p class="meta">Corridor data last verified: <span id="last-verified"></span>. This page uses a single, cookie-free pageview counter and no other tracking.</p>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // Fill in the last-verified date from stops.json once loaded (small enhancement, not acceptance-critical).
+    fetch("stops.json").then(r => r.json()).then(d => {
+      const el = document.getElementById("last-verified");
+      if (el) el.textContent = d.lastVerified;
+    }).catch(() => {});
+  </script>
+</body>
+</html>
