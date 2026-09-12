@@ -86,7 +86,7 @@ An idea is **not eligible** for the next-work pick if any of these apply:
 - `lifecycle` is **`On Hold`**, **`Dropped`**, or **`Done`**.
 - The idea is at **Build** and its `checkpoint.status` is **`"In Review"`** — it is owner-gated at a checkpoint (same standing as `lifecycle: "In Review"`). See [`docs/priorities-registry.md`](docs/priorities-registry.md) **checkpoint.status is the eligibility signal**.
 
-A Build idea whose `checkpoint.status` is **`"Ready"`** **is** eligible: `Ready` means the next action is an agent-executable slice, so take that slice. An *upcoming* owner checkpoint later in the plan does **not** block the slices that come before it — do those, then stop at the checkpoint. If a slice needs a capability the environment lacks, do not skip the idea: author what you can in `repo/`, hand the run to the owner in the checkpoint, and move the idea to `In Review` (see [`rules/execution-environment.md`](rules/execution-environment.md)).
+A Build idea whose `checkpoint.status` is **`"Ready"`** **is** eligible: `Ready` means the next action is an agent-executable slice, so take that slice. An *upcoming* owner checkpoint later in the plan does **not** block the slices that come before it — do those, then stop at the checkpoint. If a slice needs a capability the environment lacks, do not skip the idea: author what you can in `repo/`, hand the run to the owner in the checkpoint, and move the idea to `In Review`.
 
 Do not start new execution on a blocked idea until approval clears it or you redirect.
 

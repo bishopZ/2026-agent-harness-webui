@@ -1,28 +1,10 @@
 {
   "version": 3,
-  "updated": "2026-06-15",
+  "updated": "2026-09-12",
   "initiatives": {
-    "My Company": {
-      "tier": 8,
-      "lastWork": "2026-05-29",
-      "projects": {
-        "General": {
-          "priority": "Medium",
-          "purpose": "Default bucket for ideas that do not belong to another project yet.",
-          "ideas": {
-            "Example Idea": {
-              "priority": "Medium",
-              "lifecycle": "In Review",
-              "lastUpdated": "2026-05-29",
-              "notes": "Brief drafted — awaiting approval → Pressure Test (02_pressure_test.md). brief"
-            }
-          }
-        }
-      }
-    },
-    "My Hobby": {
-      "tier": 1,
-      "lastWork": "2026-04-14",
+    "Transit": {
+      "tier": 9,
+      "lastWork": "2026-09-12",
       "projects": {
         "General": {
           "priority": "Medium",
@@ -31,9 +13,53 @@
         }
       }
     },
-    "My Personal Life": {
+    "Food": {
+      "tier": 7,
+      "lastWork": "2026-09-12",
+      "projects": {
+        "General": {
+          "priority": "Medium",
+          "purpose": "Default bucket for ideas that do not belong to another project yet.",
+          "ideas": {}
+        }
+      }
+    },
+    "Accountability": {
       "tier": 6,
-      "lastWork": "2026-04-14",
+      "lastWork": "2026-09-12",
+      "projects": {
+        "General": {
+          "priority": "Medium",
+          "purpose": "Default bucket for ideas that do not belong to another project yet.",
+          "ideas": {}
+        }
+      }
+    },
+    "Housing": {
+      "tier": 5,
+      "lastWork": "2026-09-12",
+      "projects": {
+        "General": {
+          "priority": "Medium",
+          "purpose": "Default bucket for ideas that do not belong to another project yet.",
+          "ideas": {}
+        }
+      }
+    },
+    "Literacy": {
+      "tier": 4,
+      "lastWork": "2026-09-12",
+      "projects": {
+        "General": {
+          "priority": "Medium",
+          "purpose": "Default bucket for ideas that do not belong to another project yet.",
+          "ideas": {}
+        }
+      }
+    },
+    "Media": {
+      "tier": 3,
+      "lastWork": "2026-09-12",
       "projects": {
         "General": {
           "priority": "Medium",

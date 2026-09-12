@@ -32,6 +32,23 @@ _Counts current as of v2.0.0._
 
 ---
 
+## Initiatives
+
+The repo currently tracks six initiatives, ranked by tier in `priorities.json` (the live registry the Web UI edits — this table is a snapshot):
+
+| Initiative | What |
+| --- | --- |
+| Transit | Things-to-do guides and rider tools for public transit routes, from public schedule data. |
+| Food | Pickup guides and volunteer materials from an org's surplus or pantry lists. |
+| Accountability | Watching public records or agendas for chosen keywords and briefing when they appear. |
+| Housing | Plain-language, sourced-and-dated guides to tenant and housing resources. |
+| Literacy | Reading-circle curricula and companion materials for library branches. |
+| Media | Cause-driven visuals and posts from an org's public footage or campaign material. |
+
+Swap these out for your own initiatives at any time via the Priority workspace or by editing `priorities.json` directly.
+
+---
+
 ## What makes it different
 
 | Differentiator | What it means |

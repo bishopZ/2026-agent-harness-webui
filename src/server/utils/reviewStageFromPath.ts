@@ -18,9 +18,20 @@ const ARTIFACT_STAGE_LABELS: Record<string, string> = {
   '09_growth_log.md': 'Growth',
 };
 
-/** Pull `reviewDocumentPath` from an idea notes block (AGENTS.md convention). */
+/**
+ * Pull `reviewDocumentPath` from an idea notes block (AGENTS.md convention).
+ * Notes are free-text and the convention is a line of its own, but entries
+ * have been hand-edited to append `reviewDocumentPath:` mid-paragraph
+ * instead (no leading newline) - a line-start anchor silently drops those,
+ * which then shows up as a missing link *and* a display fallback to the
+ * literal "In Review" (see lifecycleDisplayForIdea below), even though
+ * In Review is a waiting state, not a stage. Match the label wherever it
+ * appears (word-boundary guarded so it can't match inside another word)
+ * and still capture to end of line, since deep-link paths can contain
+ * spaces (initiative/project names).
+ */
 export const parseReviewDocumentPath = (notes?: string): string | undefined => {
-  const match = notes?.match(/^reviewDocumentPath:\s+(.+)$/m);
+  const match = notes?.match(/\breviewDocumentPath:\s+(.+)$/m);
   return match ? match[1].trim() : undefined;
 };
 

@@ -17,9 +17,12 @@ _This file helps the AI stay oriented across sessions. Update it as context buil
 
 | Initiative | Description |
 |---|---|
-| **My Personal Life** | Building and managing your personal brand, habits, goals, and growth across platforms and audiences |
-| **My Company** | Initiatives, products, and growth efforts for your business |
-| **My Hobby** | Developing, creating, and bringing to market your creative or hobby project |
+| **Transit** | Things-to-do guides and rider tools for public transit routes, from public schedule data. |
+| **Food** | Pickup guides and volunteer materials from an org's surplus or pantry lists. |
+| **Accountability** | Watching public records or agendas for chosen keywords and briefing when they appear. |
+| **Housing** | Plain-language, sourced-and-dated guides to tenant and housing resources. |
+| **Literacy** | Reading-circle curricula and companion materials for library branches. |
+| **Media** | Cause-driven visuals and posts from an org's public footage or campaign material. |
 
 ---
 
