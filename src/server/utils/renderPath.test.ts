@@ -4,12 +4,13 @@
  */
 
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { normalizeRenderPath } from './renderPath.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const harnessRoot = path.resolve(__dirname, '../../..');
+// Self-contained fixture harness root, so the test doesn't depend on whatever
+// initiative docs happen to exist in the real repo.
+const harnessRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'renderPath-test-'));
 
 let passed = 0;
 let failed = 0;
@@ -30,6 +31,10 @@ const sidebarStyle =
   'Time2Magic/Agent Harness Web UI/Harness platform strategy/02_pressure_test.md';
 const harnessRootStyle =
   'initiatives/Time2Magic/Agent Harness Web UI/Harness platform strategy/02_pressure_test.md';
+
+const fixtureFile = path.join(harnessRoot, harnessRootStyle);
+fs.mkdirSync(path.dirname(fixtureFile), { recursive: true });
+fs.writeFileSync(fixtureFile, '# fixture\n');
 
 assert(
   normalizeRenderPath(sidebarStyle) === path.join('initiatives', sidebarStyle),
@@ -59,6 +64,8 @@ assert(
 // Double-prefix regression: old bug would look for initiatives/initiatives/...
 const buggy = path.join(harnessRoot, 'initiatives', harnessRootStyle);
 assert(!fs.existsSync(buggy), 'double-prefixed path must not exist (regression guard)');
+
+fs.rmSync(harnessRoot, { recursive: true, force: true });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed > 0 ? 1 : 0);
