@@ -28,9 +28,9 @@ Resolve from the user and files:
 
 If the idea only has a `priorities.json` entry and **no** `initiatives/[Initiative]/[Project]/[Idea]/` folder:
 
-1. Set `lifecycle: "Done"` in `priorities.json`, update `notes` with outcome, `lastUpdated` to completed date. Remove any `reviewDocumentPath:` line.
+1. Set `lifecycle: "Done"` in `priorities.json`, update `notes` with outcome, `lastUpdated` to completed date.
 2. Append a row to `initiatives/[Initiative]/history/done-history.md` with **Idea**, **Project**, **Completed**, **Outcome**.
-3. Set initiative `lastWork` to **Completed date** when this session closed real work.
+3. Set initiative `lastWork` to **Completed date** — closing an idea is work on the initiative (never move `lastWork` backwards).
 4. Skip archive directory steps. Summarize what you changed.
 
 ## Full workflow (idea folder or artifacts exist)
@@ -56,7 +56,7 @@ Run in order.
 
 ### 4. Record Done
 
-1. In `priorities.json`, set `lifecycle: "Done"`, `lastUpdated` to completed date, `notes` with outcome + archive link. Remove any `reviewDocumentPath:` line.
+1. In `priorities.json`, set `lifecycle: "Done"`, `lastUpdated` to completed date, `notes` with outcome + archive link.
 2. Append a row to `history/done-history.md`:
 
 | Column | Content |
@@ -80,7 +80,7 @@ Long-form Done history lives only in `history/done-history.md`.
 
 ### 7. Tracker date
 
-If this completion was substantive, set that initiative’s `lastWork` in `priorities.json` to **Completed date**.
+Set that initiative’s `lastWork` in `priorities.json` to **Completed date** (never move it backwards).
 
 ## Completion summary (return to user)
 

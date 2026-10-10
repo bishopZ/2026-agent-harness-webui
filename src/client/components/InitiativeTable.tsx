@@ -8,28 +8,46 @@
  *                          never appear in the /doc route.
  */
 import { useState } from 'react';
-import { isOwnerBlocked } from '../utils/checkpointSort.js';
+import { CHECKPOINT_GATE_COLORS, checkpointGate } from '../utils/checkpointSort.js';
 
-// ─── Types (mirrored from server sidecarTypes.ts, read-only on client) ────────
+// ─── Types (mirrored from server, read-only on client) ────────────────────────
+//
+// Each idea arrives as its stored registry fields plus a derived `view`
+// (server: ideaView.ts). The registry stays simple; display logic reads `view`.
 
-interface CheckpointEntry {
-  current: string;
-  index: number;
-  total: number;
-  status: string;
-  label?: string;
-  reason?: string;
-  asOf?: string;
-  evidence?: string;
-  buildPlanPath?: string;
+export interface CheckpointHeading {
+  id: string;
+  name: string;
 }
 
-interface IdeaEntry {
+export interface BuildView {
+  /** Harness-root path to 05_build_plan.md. */
+  planPath: string;
+  /** Checkpoint headings parsed from the plan, in order. */
+  checkpoints: CheckpointHeading[];
+  /** Checkpoint id recorded in priorities.json; undefined = not recorded. */
+  current?: string;
+  /** Zero-based position of `current` (= checkpoints cleared). -1 when unknown. */
+  index: number;
+  /** Milestone name of `current`. */
+  name?: string;
+}
+
+export interface IdeaView {
+  stage: string;
+  inReview: boolean;
+  reviewDocumentPath?: string;
+  next?: string;
+  build?: BuildView;
+}
+
+export interface IdeaEntry {
   priority: string;
   lifecycle: string;
   lastUpdated: string;
   notes: string;
-  checkpoint?: CheckpointEntry;
+  checkpoint?: string;
+  view: IdeaView;
 }
 
 interface ProjectEntry {
@@ -92,7 +110,7 @@ function TierInput({
   );
 }
 
-const PRIORITY_OPTIONS = ['High', 'Medium', 'Low'] as const;
+const PRIORITY_OPTIONS = ['Very High', 'High', 'Medium', 'Low', 'Very Low'] as const;
 
 /** Select for project or idea priority. Posts on change. */
 function PrioritySelect({
@@ -293,12 +311,12 @@ export function InitiativeTable({ data, onUpdate, saving = new Set() }: Props) {
                                               )}
                                             </td>
                                             <td style={tdStyle}>
-                                              <LifecycleBadge value={idea.lifecycle} />
+                                              <LifecycleBadge view={idea.view} />
                                             </td>
                                             <td style={tdStyle}>
                                               <CheckpointCell
-                                                checkpoint={idea.checkpoint}
-                                                lifecycle={idea.lifecycle}
+                                                view={idea.view}
+                                                lastUpdated={idea.lastUpdated}
                                               />
                                             </td>
                                             <td style={{ ...tdStyle, ...monoStyle }}>
@@ -331,56 +349,52 @@ export function InitiativeTable({ data, onUpdate, saving = new Set() }: Props) {
 
 function PriorityBadge({ value }: { value: string }) {
   const color =
+    value === 'Very High' ? '#166534' :
     value === 'High' ? '#15803d' :
     value === 'Medium' ? '#0369a1' :
     value === 'Low' ? '#6b7280' :
+    value === 'Very Low' ? '#9ca3af' :
     '#374151';
   return <span style={{ color, fontWeight: 500 }}>{value}</span>;
 }
 
-/** Status → colour. Owner-blocked states are the ones worth spotting at a glance. */
-const CHECKPOINT_COLORS: Record<string, string> = {
-  'In Review': '#b45309',
-  Ready: '#0369a1',
-};
-
 /**
  * Which checkpoint is this idea on?
  *
- * Renders "C · 3/5" plus the gate state. Blank for ideas that never reached a
- * Build Plan; an explicit "no checkpoint data" marker for Build-stage ideas
- * missing the field, since that gap is itself the thing worth noticing.
+ * Renders "C · 3/5" plus the gate state, all derived: the registry stores only
+ * the checkpoint id; position and total come from the build plan headings, and
+ * the gate is just whether the idea is In Review. Blank before Build; a
+ * "not recorded" marker for a Build idea with no checkpoint id, since that gap
+ * is itself worth noticing.
  */
-function CheckpointCell({
-  checkpoint,
-  lifecycle,
-}: {
-  checkpoint?: CheckpointEntry;
-  lifecycle: string;
-}) {
-  const isBuildish =
-    lifecycle === 'Build' || lifecycle === 'Build Plan' || lifecycle === 'In Review';
+function CheckpointCell({ view, lastUpdated }: { view: IdeaView; lastUpdated: string }) {
+  const build = view.build;
+  if (!build) return <span style={{ color: '#d1d5db' }}>—</span>;
 
-  if (!checkpoint) {
-    return isBuildish ? (
+  const gate = checkpointGate(view.inReview);
+  const color = CHECKPOINT_GATE_COLORS[gate];
+  const total = build.checkpoints.length;
+
+  if (build.current === undefined || build.index < 0) {
+    return (
       <span
         style={{ color: '#b91c1c', fontSize: '0.75rem' }}
-        title="This idea is at Build but has no checkpoint recorded in priorities.json. Run the health-check skill."
+        title={
+          build.current === undefined
+            ? 'At Build but no checkpoint id in priorities.json. Set "checkpoint": "<id>" on the idea.'
+            : `priorities.json says checkpoint ${build.current}, but ${build.planPath} has no such heading.`
+        }
       >
-        not recorded
+        {build.current === undefined ? 'not recorded' : `${build.current}?`}
       </span>
-    ) : (
-      <span style={{ color: '#d1d5db' }}>—</span>
     );
   }
 
-  const color = CHECKPOINT_COLORS[checkpoint.status] ?? '#374151';
-  const isBlocking = isOwnerBlocked(checkpoint.status);
   const tooltip = [
-    checkpoint.label && `Checkpoint ${checkpoint.current} — ${checkpoint.label}`,
-    checkpoint.reason,
-    checkpoint.asOf && `As of ${checkpoint.asOf}`,
-    checkpoint.evidence,
+    build.name && `Checkpoint ${build.current} — ${build.name}`,
+    view.next && `Next: ${view.next}`,
+    `As of ${lastUpdated}`,
+    build.planPath,
   ]
     .filter(Boolean)
     .join('\n');
@@ -399,27 +413,31 @@ function CheckpointCell({
           padding: '0 0.3rem',
         }}
       >
-        {checkpoint.current}
+        {build.current}
       </span>
       <span style={{ ...monoStyle, fontSize: '0.7rem' }}>
-        {checkpoint.index}/{checkpoint.total}
+        {build.index}/{total}
       </span>
-      <span style={{ color, fontWeight: isBlocking ? 600 : 400, fontSize: '0.75rem' }}>
-        {isBlocking ? '⏸ ' : ''}
-        {checkpoint.status}
+      <span style={{ color, fontWeight: view.inReview ? 600 : 400, fontSize: '0.75rem' }}>
+        {view.inReview ? '⏸ ' : ''}
+        {gate}
       </span>
     </span>
   );
 }
 
-function LifecycleBadge({ value }: { value: string }) {
-  const isReview = value === 'In Review';
+/** Stage label (derived), amber when the idea is waiting on you. */
+function LifecycleBadge({ view }: { view: IdeaView }) {
   return (
-    <span style={{
-      color: isReview ? '#b45309' : '#374151',
-      fontWeight: isReview ? 600 : 400,
-    }}>
-      {value}
+    <span
+      style={{
+        color: view.inReview ? '#b45309' : '#374151',
+        fontWeight: view.inReview ? 600 : 400,
+      }}
+      title={view.inReview ? `${view.stage} — awaiting your review` : undefined}
+    >
+      {view.stage}
+      {view.inReview && view.stage !== 'In Review' ? ' · review' : ''}
     </span>
   );
 }

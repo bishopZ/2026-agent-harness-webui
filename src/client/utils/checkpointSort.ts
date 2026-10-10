@@ -3,8 +3,8 @@
  *
  * Two columns need real comparators rather than string compare:
  *
- * - **Gate** sorts by how much it blocks you, not alphabetically. "Awaiting
- *   owner" first, "Superseded" last — same idea as `compareLifecycleStages`.
+ * - **Gate** sorts by how much it blocks you, not alphabetically. "In Review"
+ *   (needs you) before "Ready" — same idea as `compareLifecycleStages`.
  * - **Progress** sorts by fraction complete, so a build at 3/4 outranks one at
  *   2/5. Raw `index` would put a 2-of-2 build below a 3-of-8 build.
  *
@@ -17,24 +17,28 @@
  * Gate states, in default view order.
  *
  * Only one question matters here: **can the agent loop pick this up, or is it
- * waiting on you?** Everything else (which checkpoint, how the last one closed,
- * whether the plan itself is the thing under review) is narrative — it belongs
- * in `reason`, not in a status that implies a different next action.
+ * waiting on you?** The registry does not store this — it is derived from
+ * `lifecycle`: an idea at Build with `lifecycle: "In Review"` is owner-gated,
+ * anything else at Build is `Ready`. Which checkpoint, how far along, and what
+ * is next are derived too (build plan headings, notes) — see the server's
+ * `ideaView.ts`.
  *
- * - `In Review` — hard stop. Matches `lifecycle: "In Review"` in the registry
- *   and the approval queue. Covers both "Build Plan awaiting approval at 6a"
- *   and "mid-build checkpoint gate open" — from the loop's side they are the
- *   same wall.
- * - `Ready` — a gate has cleared and tasks remain; the agent may proceed. It
- *   makes no difference whether the current checkpoint group has tasks logged
- *   yet or the previous one just closed.
- *
- * There is no state for a finished or abandoned build. When a build completes
- * or its plan is superseded, the `checkpoint` object is **removed** from that
- * idea in `priorities.json` — the build is done being tracked, so it drops out
- * of the panel by absence rather than by a filter.
+ * A finished or abandoned build simply leaves the Build stage (its lifecycle
+ * moves on), so it drops out of the panel without any cleanup step.
  */
 export const CHECKPOINT_STATUS_ORDER = ['In Review', 'Ready'] as const;
+
+export type CheckpointGate = (typeof CHECKPOINT_STATUS_ORDER)[number];
+
+/** Derive the gate label from the idea's In Review flag. */
+export const checkpointGate = (inReview: boolean): CheckpointGate =>
+  inReview ? 'In Review' : 'Ready';
+
+/** Gate → colour. Amber = needs you (same signal as the approval queue). */
+export const CHECKPOINT_GATE_COLORS: Record<CheckpointGate, string> = {
+  'In Review': '#b45309',
+  Ready: '#0369a1',
+};
 
 const statusRank = new Map<string, number>(
   CHECKPOINT_STATUS_ORDER.map((status, index) => [status, index]),

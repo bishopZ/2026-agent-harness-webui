@@ -38,7 +38,7 @@ assert(
 
 assert(
   normalizeRenderPath(harnessRootStyle) === harnessRootStyle,
-  'harness-root reviewDocumentPath is left unchanged'
+  'harness-root review link is left unchanged'
 );
 
 assert(

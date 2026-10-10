@@ -23,7 +23,7 @@ Resolve from the user and files:
 - **Initiative** - which `initiatives/[Initiative Name]/` folder (must exist). Ask once if ambiguous.
 - **Project name** - the exact string for the folder name and `priorities.json` key. Must not duplicate an existing project under that initiative.
 - **Purpose** - one-line description (stored as `purpose` on the project entry).
-- **Priority** - `High`, `Medium`, or `Low` (or `1` / `2` / `3`). Default **Medium** when not specified.
+- **Priority** - `Very High`, `High`, `Medium`, `Low`, or `Very Low` (or `1`–`5`, 1 = Very High). Default **Medium** when not specified.
 
 Do not invent initiatives. Do not create a project that already exists in `priorities.json` for that initiative.
 
@@ -35,7 +35,7 @@ Do not invent initiatives. Do not create a project that already exists in `prior
 | 2 | Create `initiatives/[Initiative]/[Project Name]/` on disk (flat — no `projects/` container). Add `.gitkeep` if no other files will be placed there immediately. |
 | 3 | Create `initiatives/[Initiative]/[Project Name]/00-how-to-use.md` (see below). |
 | 4 | **If the project has an associated GitHub repo:** create an empty `repo/` subfolder with a `.gitkeep` inside. Add the **Repo** section to `00-how-to-use.md` (see below). Do not attempt to configure the submodule — tell the user to run `git submodule add <repo-url> "initiatives/[Initiative]/[Project Name]/repo"` from the repo root. |
-| 5 | Optionally set initiative `lastWork` to today in `priorities.json` when this is a significant structural addition. |
+| 5 | Set initiative `lastWork` to today in `priorities.json` — any work on the initiative counts toward recency. |
 
 Registry is `priorities.json` only.
 

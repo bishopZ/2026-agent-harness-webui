@@ -8,17 +8,18 @@ import { reconcile, buildDiscoverResponse } from '../utils/reconcileSidecar.js';
  * response always reflects the current harness state.  Returns the merged tree:
  *
  * {
- *   version: number,
- *   updated: string,
+ *   version, updated,
  *   initiatives: {
  *     "[Initiative]": {
- *       tier: number,
- *       lastWork: string,
+ *       tier, lastWork,
  *       projects: {
  *         "[Project]": {
- *           priority: string,
+ *           priority, purpose,
  *           ideas: {
- *             "[Idea]": { priority, lifecycle, lastUpdated, notes }
+ *             "[Idea]": {
+ *               priority, lifecycle, lastUpdated, notes, checkpoint?,   ← as stored
+ *               view: { stage, inReview, reviewDocumentPath?, next?, build? }  ← derived
+ *             }
  *           }
  *         }
  *       }
@@ -26,8 +27,8 @@ import { reconcile, buildDiscoverResponse } from '../utils/reconcileSidecar.js';
  *   }
  * }
  *
- * For In Review ideas, `lifecycle` is the stage under review (from
- * reviewDocumentPath), matching GET /api/approval-queue.
+ * Stored fields pass through untouched. `view` is computed per request from
+ * the registry plus the idea folder (see `ideaView.ts`) and is never written.
  */
 export function createDiscoverRouter(harnessRoot: string): Router {
   const router = Router();

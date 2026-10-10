@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 import writeFileAtomic from 'write-file-atomic';
 import { prioritiesPath } from '../paths.js';
 import { discoverHarness, HarnessTree } from './discoverHarness.js';
@@ -16,7 +15,7 @@ import {
   defaultIdea,
   todayISO,
 } from './sidecarTypes.js';
-import { lifecycleDisplayForIdea } from './reviewStageFromPath.js';
+import { deriveIdeaView, type IdeaView } from './ideaView.js';
 
 // ─── File I/O helpers ─────────────────────────────────────────────────────────
 
@@ -105,28 +104,6 @@ function mergeTrees(sidecar: PrioritiesFile, tree: HarnessTree, harnessRoot: str
   }
 }
 
-/**
- * Harness-root-relative path to an idea's `05_build_plan.md`, or undefined when
- * the file does not exist.
- *
- * Goes through `resolveIdeaFolderPath` so the legacy `projects/` container
- * layout resolves correctly — the folder name cannot be assumed to be
- * `initiatives/<init>/<proj>/<idea>`. Returns posix separators because the
- * value becomes a URL query param.
- */
-function buildPlanPathFor(
-  harnessRoot: string,
-  initName: string,
-  projName: string,
-  ideaName: string,
-): string | undefined {
-  const folder = resolveIdeaFolderPath(harnessRoot, initName, projName, ideaName);
-  const absolute = path.join(folder, '05_build_plan.md');
-  if (!fs.existsSync(absolute)) return undefined;
-
-  return path.relative(harnessRoot, absolute).split(path.sep).join('/');
-}
-
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -150,46 +127,44 @@ export async function reconcile(harnessRoot: string): Promise<PrioritiesFile> {
   return sidecar;
 }
 
+/** An idea as GET /api/discover returns it: raw registry fields + derived view. */
+export type DiscoverIdea = IdeaEntry & { view: IdeaView };
+
+export interface DiscoverResponse extends Omit<PrioritiesFile, 'initiatives'> {
+  initiatives: Record<
+    string,
+    Omit<InitiativeEntry, 'projects'> & {
+      projects: Record<string, Omit<ProjectEntry, 'ideas'> & { ideas: Record<string, DiscoverIdea> }>;
+    }
+  >;
+}
+
 /**
- * Build the merged response tree that combines filesystem structure with
- * sidecar priority/lifecycle data.  Used by GET /api/discover.
+ * Build the response for GET /api/discover: every registry field exactly as
+ * stored, plus a derived `view` object per idea (stage under review, review
+ * document, build checkpoints, next step — see `ideaView.ts`).
  *
- * Each initiative node includes: tier, lastWork, projects (with priority),
- * and ideas (with priority + lifecycle + lastUpdated + notes).
- *
- * For ideas with registry lifecycle "In Review", `lifecycle` in the response is
- * the stage under review (from reviewDocumentPath) — same as the approval queue.
- * Disk/`priorities.json` is not modified.
+ * The registry stays simple and the view does the work. Raw fields are passed
+ * through untouched (an In Review idea still reads `lifecycle: "In Review"`);
+ * display labels live only in `view`. Disk/`priorities.json` is not modified.
  */
 export function buildDiscoverResponse(
   sidecar: PrioritiesFile,
-  harnessRoot?: string,
-): PrioritiesFile {
-  const initiatives: PrioritiesFile['initiatives'] = {};
+  harnessRoot: string,
+): DiscoverResponse {
+  const initiatives: DiscoverResponse['initiatives'] = {};
 
   for (const [initName, initEntry] of Object.entries(sidecar.initiatives)) {
-    const projects: InitiativeEntry['projects'] = {};
+    const projects: DiscoverResponse['initiatives'][string]['projects'] = {};
 
     for (const [projName, projEntry] of Object.entries(initEntry.projects)) {
-      const ideas: ProjectEntry['ideas'] = {};
+      const ideas: Record<string, DiscoverIdea> = {};
 
       for (const [ideaName, ideaEntry] of Object.entries(projEntry.ideas)) {
-        const entry: IdeaEntry = {
+        ideas[ideaName] = {
           ...ideaEntry,
-          lifecycle: lifecycleDisplayForIdea(ideaEntry),
+          view: deriveIdeaView(harnessRoot, initName, projName, ideaName, ideaEntry),
         };
-
-        // Deep-link target for the checkpoint panel. Derived per request rather
-        // than stored, so a renamed or deleted plan can never leave a dead link
-        // behind in priorities.json.
-        if (entry.checkpoint && harnessRoot) {
-          const planPath = buildPlanPathFor(harnessRoot, initName, projName, ideaName);
-          if (planPath) {
-            entry.checkpoint = { ...entry.checkpoint, buildPlanPath: planPath };
-          }
-        }
-
-        ideas[ideaName] = entry;
       }
 
       projects[projName] = { ...projEntry, ideas };

@@ -68,14 +68,14 @@ For each idea the user wants to archive:
 
 1. Follow the full **drop-idea** workflow (see `skills/drop-idea/SKILL.md`) for each idea individually. Use the project removal as the reason if the user does not supply a specific one.
 2. Move the idea's lifecycle folder to an `archive/` bundle at the repo root. Include the `outputs/` subfolder in the move - finished deliverables travel with the work that produced them.
-3. Record the idea in `history/dropped-history.md` and set `lifecycle: "Dropped"` in `priorities.json` (remove `reviewDocumentPath` if present).
+3. Record the idea in `history/dropped-history.md` and set `lifecycle: "Dropped"` in `priorities.json`.
 
 ### Option B - Move to another project
 
 For each idea the user wants to move:
 
 1. Confirm the destination project exists in the same initiative (it must already be in `priorities.json`). If it does not exist, offer to create it with the **add-project** skill first.
-2. Move the idea object from the old project’s `ideas` map to the new project’s `ideas` map in `priorities.json`. Keep `lifecycle`, `priority`, and `notes` intact. Update `lastUpdated` to today. Update any `reviewDocumentPath` if the on-disk path changed.
+2. Move the idea object from the old project’s `ideas` map to the new project’s `ideas` map in `priorities.json`. Keep `lifecycle`, `priority`, and `notes` intact. Update `lastUpdated` to today.
 3. If a `initiatives/[Initiative]/[Old Project]/[Idea]/` folder exists, move it to `initiatives/[Initiative]/[New Project]/[Idea]/` using a git-aware move (`git mv`) to preserve history.
 4. Update any links in `priorities.json` notes or wiki files that referenced the old folder path.
 
@@ -101,7 +101,7 @@ Once all ideas are resolved:
    - If it is now empty (only `.gitkeep`, `00-how-to-use.md`, `repo/` placeholder, or no files), delete it entirely.
    - If any files remain (for example a `sources/` or `outputs/` subfolder the user wants to keep), ask the user whether to move those files elsewhere or leave the folder without a project registry entry.
 4. Remove `00-how-to-use.md` in that project folder when the folder is being deleted.
-5. Set initiative `lastWork` and root `updated` when this session involved substantive changes.
+5. Set initiative `lastWork` and root `updated` to today.
 
 Closed projects live in `project-history.md`, not in a live markdown projects table.
 

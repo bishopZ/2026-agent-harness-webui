@@ -54,7 +54,7 @@ Swap these out for your own initiatives at any time via the Priority workspace o
 | Differentiator | What it means |
 | --- | --- |
 | Human-approved at every stage | 11 stages from brief to growth; nothing advances without your sign-off. |
-| Fair prioritization across everything | Combined score (`staleness × 2 + tier + project + idea`) so lower-tier initiatives are not starved. |
+| Fair prioritization across everything | Combined score (`staleness × 2 + tier × 3 + project + idea`) so lower-tier initiatives are not starved. |
 | Everything is a Markdown file (+ one JSON registry) | Rules, stages, and decisions stay plain files; `priorities.json` is the only structured sidecar the UI edits. |
 | Local browser shell | Doc reader and priority forms on `127.0.0.1` — no hosted service. |
 
@@ -125,18 +125,21 @@ Both variables are loaded from `.env` at startup via `dotenv`. See `.env.example
 | Field | Type | Values |
 |---|---|---|
 | `initiatives.[Name].tier` | integer | any positive integer |
-| `initiatives.[Name].projects.[P].priority` | string | `"High"` \| `"Medium"` \| `"Low"` |
-| `initiatives.[Name].projects.[P].ideas.[I].priority` | string | `"High"` \| `"Medium"` \| `"Low"` |
+| `initiatives.[Name].projects.[P].priority` | string | `"Very High"` \| `"High"` \| `"Medium"` \| `"Low"` \| `"Very Low"` |
+| `initiatives.[Name].projects.[P].ideas.[I].priority` | string | `"Very High"` \| `"High"` \| `"Medium"` \| `"Low"` \| `"Very Low"` |
+
+**Keep it simple.** The registry holds plain facts; the Web UI derives everything else it shows (stage under review, the document to open, checkpoint counts and progress, gate colour, next step) from these fields plus the files on disk. When the dashboard needs something new, change the view, not the schema — see `docs/priorities-registry.md` **Design rule**.
 
 **Agent-maintained fields** (the Web UI never writes these):
 
 | Field | Maintained by |
 |---|---|
 | `lifecycle` | Agent (next-idea, approve-idea skills) |
-| `lastWork` | Agent (updated when initiative work completes) |
+| `lastWork` | Agent (set to today whenever any work is done on the initiative, lifecycle step or not) |
 | `lastUpdated` | Agent (updated when idea row changes) |
 | `notes` | Agent (next steps, links, waivers) |
 | `purpose` (project) | Agent |
+| `checkpoint` (Build ideas only) | Agent — one id from the `05_build_plan.md` heading, e.g. `"C"` |
 
 All writes go through a server-side allowlist that rejects any attempt to modify agent-maintained fields with HTTP 400. Writes use `write-file-atomic` — partial writes and corruption on concurrent requests are not possible.
 
@@ -145,6 +148,20 @@ All writes go through a server-side allowlist that rejects any attempt to modify
 ## Approval queue
 
 The approval queue (shown at the top of the Priority workspace) is **derived**, not stored. It is rebuilt on every `GET /api/approval-queue` call by scanning `priorities.json` for ideas where `lifecycle === "In Review"`. Clearing an item from the queue means the agent sets `lifecycle` to the next stage — the queue entry disappears automatically on the next refresh.
+
+---
+
+## What does drift look like?
+
+Drift is when the agent slips out of the lifecycle and stops waiting for your approval gates. Watch for these signs:
+
+- **The agent writes a report instead of doing the task.** You asked for the stage's work, and you got a summary or a plan about it instead.
+- **The agent approves an idea and then keeps going to complete the next idea.** Approving is the gate. After one idea it should stop, not start on the next one.
+- **The agent does more than one step without a gate.** Each lifecycle stage should end with an artifact that is `In Review`, waiting for your sign-off.
+- **An approved project or idea stays in the approval queue.** Its `lifecycle` in `priorities.json` was never advanced past `In Review`.
+- **The approval queue gets too long.** Work is piling up in `In Review` faster than it is being approved or dropped.
+
+**If you suspect drift, run the health-check skill** (`skills/health-check/SKILL.md`). It syncs `priorities.json` with the filesystem, checks the approval queue and review paths, and flags where registry rows and artifacts disagree.
 
 ---
 
@@ -239,7 +256,7 @@ See [docs/priorities-registry.md](docs/priorities-registry.md). Prefer running s
 
 After import finishes:
 
-1. **Remove leftover markdown registry files** only after In Review / Done / Dropped rows have been applied to `priorities.json` and history files.
+1. **Remove leftover markdown registry files** (old `ideas.md` and `DASHBOARD.md` files) only after their In Review / Done / Dropped rows have been applied to `priorities.json` and history files.
 2. **Run the health-check skill** and fix anything it flags.
 3. **Rename leftover old titles** inside lifecycle artifacts if folders were renamed during migration (for example idea titles in headers that still use previous project or idea names).
 4. Commit the cleanup:
@@ -351,6 +368,7 @@ Runs two security and correctness checks:
 - **`pathGuard.test.ts`** — NF-01 (path traversal guard), NF-03 (localhost bind assertion), NF-05 (startup error message quality)
 - **`renderCheck.test.ts`** — F-07 (rendered Markdown HTML contains zero form controls, via cheerio)
 - **`reconcileSidecar.test.ts`** — new ideas infer `In Review` from brief artifacts
+- **`ideaView.test.ts`** — the view derives stage, review document, and build checkpoints from the simple registry plus files on disk
 - **`approvalQueue.test.ts`** — queue derives from `priorities.json`
 
 All scripts exit 0 on pass and 1 on any failure.
@@ -364,8 +382,8 @@ All scripts exit 0 on pass and 1 on any failure.
 | `GET` | `/api/health` | Returns `{ ok, harnessRoot, prioritiesPath }` |
 | `GET` | `/api/files` | JSON array of `.md` paths (relative to `HARNESS_ROOT`), sorted alphabetically |
 | `GET` | `/api/render?path=<rel>` | Renders a `.md` file to `{ html }` with relative links rewritten to `/doc?path=...` routes. Returns 403 on path traversal, 404 if missing. |
-| `GET` | `/api/discover` | Returns the full merged tree of initiatives, projects, ideas with sidecar fields. Triggers a reconcile pass on every call. |
-| `GET` | `/api/approval-queue` | Returns `[{ initiative, project, idea, lifecycle, lastUpdated }]` for every idea with `lifecycle === "In Review"`. |
+| `GET` | `/api/discover` | Returns the full merged tree of initiatives, projects, ideas: stored fields unchanged, plus a derived `view` per idea (`stage`, `inReview`, `reviewDocumentPath`, `next`, `build`). Triggers a reconcile pass on every call. |
+| `GET` | `/api/approval-queue` | Returns `[{ initiative, project, idea, lifecycle, lastUpdated, reviewDocumentPath }]` for every idea with `lifecycle === "In Review"`. `lifecycle` here is the stage under review and `reviewDocumentPath` the latest artifact in the idea folder — both derived, not stored. |
 | `POST` | `/api/priorities` | Body: `{ path: string, value }`. Updates one priority field in `priorities.json` atomically. Allowed suffixes: `.tier`, `.priority`. Returns 400 for disallowed fields, non-existent paths, or type mismatches. |
 
 All file-read endpoints apply a path traversal guard. Requests that resolve outside `HARNESS_ROOT` return HTTP 403.

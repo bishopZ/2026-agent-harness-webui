@@ -1,5 +1,6 @@
 import {
   CHECKPOINT_STATUS_ORDER,
+  checkpointGate,
   compareCheckpointProgress,
   compareCheckpointStatus,
   compareDates,
@@ -16,13 +17,14 @@ const assert = (condition: boolean, message: string) => {
 
 // ─── Gate status ──────────────────────────────────────────────────────────────
 
-// Exactly two states. A build is either waiting on the owner or available to
-// the agent loop; a finished build carries no checkpoint object at all, so
-// there is no "done" status to represent.
+// Exactly two states, derived from the In Review flag. A finished build leaves
+// the Build stage, so there is no "done" status to represent.
 assert(
   CHECKPOINT_STATUS_ORDER.length === 2,
-  'two gate statuses only — finished builds drop the checkpoint object entirely',
+  'two gate statuses only — finished builds leave Build and drop out',
 );
+assert(checkpointGate(true) === 'In Review', 'In Review idea → owner-gated');
+assert(checkpointGate(false) === 'Ready', 'Build idea not in review → Ready');
 
 const shuffledStatuses = ['Ready', 'In Review'];
 

@@ -11,7 +11,7 @@
  * Rules (ADR-AHWUI-04):
  *   - Only paths ending in ".tier" or ".priority" are accepted; others → 400.
  *   - The resolved key must exist in the current priorities.json; unknown keys → 400.
- *   - Value type must match the field: tier → integer, priority → High|Medium|Low; else → 400.
+ *   - Value type must match the field: tier → integer, priority → Very High|High|Medium|Low|Very Low; else → 400.
  *
  * Success: HTTP 200 { ok: true }
  * Failure: HTTP 400 { ok: false, message: string }

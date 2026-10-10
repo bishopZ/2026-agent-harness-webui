@@ -9,7 +9,7 @@
  *   - The resolved key must already exist in the current priorities.json (no new key creation).
  *   - Value type is validated before write:
  *       tier     → integer (number with no fractional part)
- *       priority → one of "High" | "Medium" | "Low"
+ *       priority → one of "Very High" | "High" | "Medium" | "Low" | "Very Low"
  *   - Writes are performed via write-file-atomic (ADR-AHWUI-05).
  */
 
@@ -27,7 +27,7 @@ export type WriteResult =
 const ALLOWED_SUFFIXES = ['tier', 'priority'] as const;
 type AllowedSuffix = (typeof ALLOWED_SUFFIXES)[number];
 
-const PRIORITY_VALUES = ['High', 'Medium', 'Low'] as const;
+export const PRIORITY_VALUES = ['Very High', 'High', 'Medium', 'Low', 'Very Low'] as const;
 type PriorityValue = (typeof PRIORITY_VALUES)[number];
 
 // ─── Path navigation helpers ──────────────────────────────────────────────────

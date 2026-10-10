@@ -23,11 +23,11 @@ User asks for a weekly health check, initiative health pass, tracker sync review
 
 1. Read `priorities.json` in full — all initiatives, tiers, `lastWork`, projects, ideas, and root `updated`.
 
-2. **Initiatives:** Check tier order, project `purpose` blurbs, and `lastWork` dates against recent work. Update when clearly stale.
+2. **Initiatives:** Check tier order, project `purpose` blurbs, and `lastWork` dates against recent work of **any** kind — file changes under the initiative, commits in its project `repo/` folders, `wiki/log.md` entries — not only lifecycle steps. Move `lastWork` forward when newer work exists.
 
-3. **Approval queue:** For each idea with `lifecycle: "In Review"`, confirm the idea key matches the folder, notes align, and a valid `reviewDocumentPath:` line exists (see `AGENTS.md`). Verify the path file exists on disk under `HARNESS_ROOT` (harness-root form includes `initiatives/`). **Lifecycle** is usually **`In Review`** for a “stage done — approve to advance” gate; it can be **`On Hold`** if the entry is for visibility (dependency block after a draft artifact) and **notes** say so — those ideas will **not** appear in the Web UI approval table unless `lifecycle` is still `In Review`.
+3. **Approval queue:** For each idea with `lifecycle: "In Review"`, confirm the idea key matches the folder, notes align, and the idea folder has at least one lifecycle artifact (the Web UI derives the stage and the document under review from the latest one). Remove any leftover `reviewDocumentPath:` lines from `notes` — the convention is retired. **Lifecycle** is usually **`In Review`** for a “stage done — approve to advance” gate; it can be **`On Hold`** if the entry is for visibility (dependency block after a draft artifact) and **notes** say so — those ideas will **not** appear in the Web UI approval table unless `lifecycle` is still `In Review`.
 
-   **Waiting-state scan (normalized detector — not exact ``**Status:** In Review`` only):** For each active idea whose registry lifecycle is not `In Review`, inspect the **latest stage artifact**. Flag (and usually fix to `In Review` + `reviewDocumentPath`) when status matches `/in\s*review/i`, or `/draft/i` plus `/awaiting (approval|owner|review)/i`, or YAML/`**Status:**` is `Draft`/`Drafted` without superseded/blocked language. This catches `Draft (In Review)` and `Draft — awaiting approval`. **Gap:** that scan does **not** find **`On Hold`** (or other non–**In Review**) ideas with a written brief and no approval-queue presence — set those to `In Review` by hand when you want them on the Web UI queue, or add a one-line **notes** reminder.
+   **Waiting-state scan (normalized detector — not exact ``**Status:** In Review`` only):** For each active idea whose registry lifecycle is not `In Review`, inspect the **latest stage artifact**. Flag (and usually fix to `In Review`) when status matches `/in\s*review/i`, or `/draft/i` plus `/awaiting (approval|owner|review)/i`, or YAML/`**Status:**` is `Draft`/`Drafted` without superseded/blocked language. This catches `Draft (In Review)` and `Draft — awaiting approval`. **Gap:** that scan does **not** find **`On Hold`** (or other non–**In Review**) ideas with a written brief and no approval-queue presence — set those to `In Review` by hand when you want them on the Web UI queue, or add a one-line **notes** reminder.
 
 4. **Which initiatives to deep-read:** Open every initiative that has an `In Review` idea **or** any idea whose lifecycle is not **`Backlog`**, **`Done`**, or **`Dropped`**.
 
@@ -39,44 +39,21 @@ User asks for a weekly health check, initiative health pass, tracker sync review
    - **`outputs/` placement:** Finished deliverables (documents, reports, assets) for a completed idea belong in that idea's `outputs/` folder or the initiative's `outputs/` folder — not in `sources/`. Flag anything placed in `sources/` that appears to be an Agent-produced artifact rather than a user-supplied input.
    - **History files:** Confirm `history/done-history.md`, `history/dropped-history.md`, and `project-history.md` exist when the initiative has Done/Dropped ideas or closed projects recorded.
 
-6. **Build checkpoint reconcile (three-way):** For every idea that has a `05_build_plan.md`, reconcile these three sources and make them agree:
+6. **Build checkpoint reconcile:** For every idea in the Build stage (`lifecycle: "Build"`, or `In Review` with `05_build_plan.md` as its latest artifact), make the registry agree with the evidence:
 
    | Source | What it holds |
    |---|---|
-   | `05_build_plan.md` front matter | `checkpoint`, `checkpoint_status`, `modified` |
-   | `05_build_plan.md` `**Next:**` line | prose statement of the next unit of work |
+   | `05_build_plan.md` | `## Checkpoint X — Name` headings (the checkpoint list) and the `**Next:**` line |
    | `05_build/verification_log.md` | the actual evidence — last task logged, last gate closed |
-   | `priorities.json` → idea → `checkpoint` | `{ current, index, total, status, label, asOf, evidence }` |
+   | `priorities.json` → idea | `lifecycle`, `lastUpdated`, `notes` (`Next:` line), `checkpoint` (one id) |
 
-   **The verification log wins.** It is append-only evidence; the other three are summaries that go stale. Read it last-entry-first and derive the truth, then fix the summaries.
+   **The verification log wins.** It is append-only evidence; the rest are summaries that go stale. Read it last-entry-first, then fix the summaries:
 
-   Derivation rules:
-   - `total` = count of `## Checkpoint …` headings in the build plan.
-   - `current` = the checkpoint whose gate has **not** cleared — the one the build is sitting at, not the last one approved.
-   - `index` = how many checkpoints have fully cleared (approved or waived). `index === total` only when the build is finished.
-   - `asOf` = date of the verification-log entry the derivation came from.
-   - `reason` = one line naming the next concrete action, so the panel says what to do and not just where the build is.
-   - `status` answers **one** question: can the agent loop take the next unit of work, or does the owner have to act first?
-
-     | Status | Means | Test |
-     |---|---|---|
-     | `In Review` | Hard stop — owner must act | A gate is open. Covers a Build Plan awaiting approval at 6a **and** a mid-build checkpoint hard stop; from the loop's side they are the same wall. Should match `lifecycle: "In Review"`. |
-     | `Ready` | Agent may proceed | A gate has cleared and tasks remain. Applies whether the current checkpoint group has tasks logged yet or the previous gate just closed. |
-
-     There is no third status. **When a build finishes its last checkpoint, or its
-     plan is superseded, delete the whole `checkpoint` object from that idea.**
-     Finished builds are ignored, not archived in place — the panel lists in-flight
-     work only, and it does that by absence rather than by filtering.
-
-     Do **not** reintroduce statuses that describe how the build arrived at this
-     state (`In progress`, `Approved`, `Not started`, `Awaiting owner`, `Complete`,
-     `Superseded`). Those are narrative — they read as different states but imply
-     the same next action (or no action at all). Put that detail in `reason`, or in
-     the idea's `notes` once the checkpoint object is gone.
-
-   **Cross-check `status` against `lifecycle`.** They answer the same question from two directions, so a mismatch is drift in one of them:
-   - `status: In Review` but `lifecycle` is not `In Review` → the idea is blocked on you but missing from the approval queue.
-   - `status: Ready` but `lifecycle: In Review` → the queue is showing an idea that actually has agent work available.
+   - `checkpoint` = the id of the checkpoint whose gate has **not** cleared — the one the build is sitting at, not the last one approved. It must match a heading in the plan exactly (`"C"`, `"2"`); a mismatch shows in the Web UI as `C?`.
+   - `lifecycle` = `In Review` when a gate is open and the owner must act; `Build` when a gate has cleared and agent-executable tasks remain. There is no separate checkpoint status.
+   - `notes` = a `Next:` line naming the next concrete action (the exact owner step when `In Review`).
+   - **Do not store** counts, positions, milestone names, dates, paths or statuses for the checkpoint — the view derives them. If an idea still carries the retired `checkpoint` object, replace it with its `current` id (move any `reason` worth keeping into a `Next:` line in `notes`).
+   - Keep plan headings in the `## Checkpoint X — Name` form so the view can read them. Fix headings that drifted (e.g. `**Checkpoint C**` as bold text instead of a heading).
 
    Flag, don't silently fix, when:
    - Task entries exist past the last gate entry — a checkpoint group finished but **its gate was never written**. This is the most common failure and it makes the build look less far along than it is.
@@ -102,7 +79,7 @@ User asks for a weekly health check, initiative health pass, tracker sync review
 10. **VERSION and CHANGELOG.md (one-time or on change):** If you see evidence that system documents were modified (new rules, new skills, updated lifecycle stages), check that `VERSION` and `CHANGELOG.md` were updated accordingly. If not, flag the discrepancy — do not update them yourself during a health pass unless you are explicitly asked to release.
 
 11. **Deliverables**
-    - Apply obvious fixes (broken links, misaligned `In Review` vs artifacts, stale `lastWork` when you can justify the date, missing `reviewDocumentPath` on `In Review` ideas).
+    - Apply obvious fixes (broken links, misaligned `In Review` vs artifacts, stale `lastWork` when you can justify the date, Build ideas missing `checkpoint`, leftover `reviewDocumentPath:` lines or checkpoint objects from the old schema).
     - Give a short summary in chat: what you checked, what you changed, what still needs your attention.
 
 12. **No standalone health report file.** Do not create a new markdown file whose only job is to summarize this pass. Updates belong in `priorities.json`, wiki files, and chat.

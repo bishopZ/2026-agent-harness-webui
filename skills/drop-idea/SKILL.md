@@ -28,9 +28,9 @@ Resolve from the user and files:
 
 If there is only a `priorities.json` entry and **no** `initiatives/[Initiative]/[Project]/[Idea]/` folder:
 
-1. Set `lifecycle: "Dropped"`, `notes` with reason, `lastUpdated` to date. Remove any `reviewDocumentPath:` line.
+1. Set `lifecycle: "Dropped"`, `notes` with reason, `lastUpdated` to date.
 2. Append a row to `initiatives/[Initiative]/history/dropped-history.md` with **Idea**, **Project**, **Date**, **Reason**.
-3. Set initiative `lastWork` when this session reflects real progress on the initiative.
+3. Set initiative `lastWork` to today — any work on the initiative counts.
 4. Skip filesystem archive steps unless the user asks to retain notes elsewhere.
 5. Summarize what you changed.
 
@@ -56,7 +56,7 @@ Run in order.
 
 ### 4. Record Dropped
 
-1. In `priorities.json`, set `lifecycle: "Dropped"`, `lastUpdated` to date, `notes` with reason + archive link. Remove any `reviewDocumentPath:` line.
+1. In `priorities.json`, set `lifecycle: "Dropped"`, `lastUpdated` to date, `notes` with reason + archive link.
 2. Append a row to `history/dropped-history.md`:
 
 | Column | Content |
@@ -80,7 +80,7 @@ Fix `priorities.json` notes and wiki links that still pointed at the old on-disk
 
 ### 7. Tracker date
 
-Update initiative `lastWork` in `priorities.json` when appropriate.
+Set initiative `lastWork` in `priorities.json` to today.
 
 ## Completion summary (return to user)
 

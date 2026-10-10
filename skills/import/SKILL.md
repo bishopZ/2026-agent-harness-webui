@@ -135,7 +135,7 @@ Project: [Name]
 
 ```
 In Review (approval queue): [count]
-  - [Idea] — source: leftover markdown table | artifact detector — reviewDocumentPath: initiatives/.../0N_....md
+  - [Idea] — source: leftover markdown table | artifact detector — under review: 0N_....md (latest artifact; the Web UI links it automatically)
 ```
 
 State the expected approval-queue count. Wait for the user to confirm before writing any files — treat the In Review list as an explicit checklist item, not an afterthought.
@@ -188,14 +188,12 @@ For each idea subfolder:
      - `/in\s*review/i` (covers `**Status:** In Review`, `Draft (In Review)`, YAML `status: In Review`, etc.)
      - `/draft/i` **and** `/awaiting (approval|owner|review)/i`
      - YAML or `**Status:**` is `Draft` / `Drafted`, and the artifact is **not** marked superseded, blocked, or “do not approve”
-  3. If awaiting: set `lifecycle` to **`In Review`** and add `reviewDocumentPath:` to that latest stage file (harness-root path — see below).
+  3. If awaiting: set `lifecycle` to **`In Review`**. Do not record a path — the Web UI links the latest stage artifact in the idea folder.
   4. Only if not awaiting: use the highest-artifact stage mapping from the table.
 
   Do **not** rely on an exact ``**Status:** In Review`` string alone — that missed most queue rows on real imports.
 
-  Set **priority** to `Medium` unless the user specified otherwise. Set **lastUpdated** to today. Set **notes** to `Imported [YYYY-MM-DD] - verify status and next step.` (plus `reviewDocumentPath` when `In Review`).
-
-  **`reviewDocumentPath` convention:** harness-root relative, always including the `initiatives/` prefix (see `AGENTS.md`). Example: `reviewDocumentPath: initiatives/Time2Magic/Cloudscape Addons/Merge articles and docs/02_pressure_test.md`. The Web UI `/api/render` accepts both this form and initiatives-relative sidebar paths — do **not** invent a second convention by stripping `initiatives/`.
+  Set **priority** to `Medium` unless the user specified otherwise. Set **lastUpdated** to today. Set **notes** to `Imported [YYYY-MM-DD] - verify status and next step.`.
 
 - **If the idea entry exists but the folder was missing** (the reverse gap): note it in your summary. Do not delete the entry; add a note in **notes** that the artifact folder was not found.
 
@@ -206,7 +204,7 @@ If the imported material still has a leftover markdown idea table, treat it as a
 1. **In Review (approval queue):** Parse Active idea tables. For every row with Status **In Review**:
    - Ensure the idea is registered under the correct project.
    - Set `lifecycle: "In Review"`.
-   - Set `reviewDocumentPath:` from the row’s primary stage-artifact link (resolve relative to the initiative folder; after any folder remaps such as flattening nested idea folders, rewrite the path to the current disk location).
+   - If the row links a stage artifact, make sure that file is the latest lifecycle artifact in the idea folder (that is what the Web UI opens). If the row points at something else — a deliverable in `outputs/`, say — mention it in `notes`; do not add a `reviewDocumentPath:` line.
    - Prefer this over filename→stage mapping in 4b.
 2. **Done / Dropped:** Append those rows into the current initiative’s `history/done-history.md` and `history/dropped-history.md` tables. Also set matching `lifecycle` values in `priorities.json` when the ideas are registered. Do not duplicate history rows that already exist.
 3. **Do not discard the table until** In Review, Done, and Dropped rows have been applied to `priorities.json` (or the user explicitly confirms skipping specific rows). Leave deletion to a later cleanup or health-check pass after registry verification — never delete the queue source mid-import.

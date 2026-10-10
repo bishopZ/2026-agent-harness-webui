@@ -20,17 +20,13 @@ Confirm or infer:
 1. **Initiative** - which `initiatives/[Initiative Name]/` folder (must exist).
 2. **Project** - named project or **General** for ungrouped ideas.
 3. **Idea title** - short, noun-style name. It must match the `initiatives/[Initiative]/[Project Name]/[Idea Name]/` folder name when lifecycle artifacts exist.
-4. **Idea priority** - `High`, `Medium`, `Low`, or `1` / `2` / `3`. Default **Medium** when unclear.
+4. **Idea priority** - `Very High`, `High`, `Medium`, `Low`, `Very Low`, or `1`–`5` (1 = Very High, 5 = Very Low). Default **Medium** when unclear.
 5. **Lifecycle** - default **Backlog** for one-line captures unless the user says otherwise.
 6. **Richness** - one line only, or extra detail. Rich content goes in `initiatives/[Initiative]/[Project Name]/[Idea Name]/01_brief.md`.
 
 **Lifecycle when you write `01_brief.md` in this skill.** Follow `IDEA_LIFECYCLE.md`. After `01_brief.md`, set `lifecycle` to **In Review** in `priorities.json` and `**Status:** In Review` in the brief. Notes should say the next stage is **Pressure Test** (`02_pressure_test.md`) unless the user waived Pressure Test (see `IDEA_LIFECYCLE.md`). Do **not** set **Research** by default after a brief.
 
-When `lifecycle` is **In Review**, include a `reviewDocumentPath:` line in `notes` (see `AGENTS.md` **reviewDocumentPath convention**). Example:
-
-```
-reviewDocumentPath: initiatives/[Initiative]/[Project]/[Idea]/01_brief.md
-```
+You do not need to record which document is under review — the Web UI finds the latest artifact in the idea folder. Do not add a `reviewDocumentPath:` line to `notes`.
 
 If initiative or idea title is ambiguous, ask once. Do not invent initiatives.
 
@@ -41,9 +37,9 @@ If initiative or idea title is ambiguous, ask once. Do not invent initiatives.
 | 1 | Edit `priorities.json` at repo root (required). Add or update the idea under `initiatives.[Initiative].projects.[Project].ideas.[Idea]`. |
 | 2 | If the **project is new**, add the project in `priorities.json` (`priority`, `purpose`, empty `ideas`) and create `initiatives/[Initiative]/[Project Name]/` with `00-how-to-use.md`. |
 | 3 | Create `initiatives/[Initiative]/[Project Name]/[Idea Name]/` when adding artifacts or a brief. |
-| 4 | If there is **rich content**, create `01_brief.md` with `**Status:** In Review` when awaiting approval. Set `lifecycle: "In Review"`, `lastUpdated` to today, and `notes` with next step + brief link + `reviewDocumentPath`. |
+| 4 | If there is **rich content**, create `01_brief.md` with `**Status:** In Review` when awaiting approval. Set `lifecycle: "In Review"`, `lastUpdated` to today, and `notes` with a `Next:` step + brief link. |
 | 5 | For backlog-only captures, set `lifecycle: "Backlog"` and a one-line `notes`. |
-| 6 | Optionally set initiative `lastWork` to today in `priorities.json` when this session counts toward recency. |
+| 6 | Set initiative `lastWork` to today in `priorities.json` — any work on the initiative counts toward recency. |
 
 Registry is `priorities.json` only.
 
@@ -54,7 +50,7 @@ Registry is `priorities.json` only.
   "priority": "Medium",
   "lifecycle": "In Review",
   "lastUpdated": "YYYY-MM-DD",
-  "notes": "Brief drafted — awaiting approval → Pressure Test (`02_pressure_test.md`).\nreviewDocumentPath: initiatives/[Initiative]/[Project]/[Idea]/01_brief.md"
+  "notes": "Brief drafted — awaiting approval. Next: approve → Pressure Test (`02_pressure_test.md`)."
 }
 ```
 

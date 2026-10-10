@@ -33,9 +33,8 @@ const main = async () => {
     `expected In Review, got ${idea?.lifecycle}`
   );
 
-  // Discover response should surface the stage under review, not "In Review"
-  idea!.notes =
-    'reviewDocumentPath: initiatives/TestInit/General/Test Idea/01_brief.md';
+  // Discover response keeps the stored fields and adds a derived view with the
+  // stage under review — worked out from the folder, nothing extra in notes.
   const discover = buildDiscoverResponse({
     version: 3,
     updated: '2026-05-29',
@@ -51,11 +50,21 @@ const main = async () => {
         },
       },
     },
-  } satisfies PrioritiesFile);
-  const display =
-    discover.initiatives['TestInit']?.projects['General']?.ideas['Test Idea']
-      ?.lifecycle;
-  assert(display === 'Brief', `discover lifecycle should be Brief, got ${display}`);
+  } satisfies PrioritiesFile, tmp);
+  const discovered =
+    discover.initiatives['TestInit']?.projects['General']?.ideas['Test Idea'];
+  assert(
+    discovered?.view.stage === 'Brief',
+    `discover view.stage should be Brief, got ${discovered?.view.stage}`,
+  );
+  assert(
+    discovered?.lifecycle === 'In Review',
+    'stored lifecycle passes through untouched',
+  );
+  assert(
+    discovered?.view.reviewDocumentPath === 'initiatives/TestInit/General/Test Idea/01_brief.md',
+    `review document derived, got ${discovered?.view.reviewDocumentPath}`,
+  );
   assert(
     idea?.lifecycle === 'In Review',
     'buildDiscoverResponse must not mutate the sidecar idea'

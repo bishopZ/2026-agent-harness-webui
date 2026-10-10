@@ -1,6 +1,22 @@
 # priorities.json — agent registry guide
 
-`priorities.json` at the harness root is the **single source of truth** for initiative tier, project priority, and idea lifecycle metadata. The Web UI reads and writes **tier** and **priority** fields only; agents maintain **lifecycle**, **lastWork**, **lastUpdated**, and **notes**.
+`priorities.json` at the harness root is the **single source of truth** for initiative tier, project priority, and idea lifecycle metadata. The Web UI reads and writes **tier** and **priority** fields only; agents maintain **lifecycle**, **lastWork**, **lastUpdated**, **notes**, and (at Build) **checkpoint**.
+
+## Design rule: simple registry, smart view
+
+`priorities.json` is written by agents, by hand, many times a day. Every field in it is something an agent has to remember to set and can get wrong, so the file holds **only facts an agent knows and the Web UI cannot work out for itself**. Everything else the dashboard shows is **derived by the view** (the Web UI server's `src/server/utils/ideaView.ts` and the React components) from these fields plus the idea's files on disk:
+
+| The UI shows | Derived from |
+|---|---|
+| Stage under review (Brief, PRD, Build…) | latest lifecycle artifact in the idea folder, when `lifecycle` is `In Review` |
+| Document to open from the approval queue | that same artifact (no path in `notes`) |
+| Build checkpoint list, count, milestone names | `## Checkpoint X — Name` headings in `05_build_plan.md` |
+| Checkpoint position / progress bar | where `checkpoint` sits among those headings |
+| Gate (`In Review` = needs you, `Ready` = agent can go) | `lifecycle` (`In Review` or not) |
+| "As of" date | `lastUpdated` |
+| What happens next | the `Next:` line in `notes` |
+
+**When the dashboard needs something new, change the view, not the schema.** Do not add display fields, cached counts, copies of other fields, paths the server can find, or status values that restate `lifecycle`. If a new display truly needs a fact that exists nowhere on disk, add the smallest plain field that captures it and derive the rest.
 
 Artifact folders use the **flat** layout: `initiatives/[Initiative]/[Project]/[Idea]/` (no `projects/` container). See [`SYSTEM_OVERVIEW.md`](../SYSTEM_OVERVIEW.md).
 
@@ -23,17 +39,8 @@ Artifact folders use the **flat** layout: `initiatives/[Initiative]/[Project]/[I
               "priority": "Medium",
               "lifecycle": "In Review",
               "lastUpdated": "YYYY-MM-DD",
-              "notes": "Next step and links",
-              "checkpoint": {
-                "current": "A",
-                "index": 0,
-                "total": 6,
-                "status": "In Review",
-                "label": "Short milestone name",
-                "asOf": "YYYY-MM-DD",
-                "evidence": "initiatives/Initiative/Project/Idea/05_build_plan.md",
-                "reason": "What the gate is waiting on / what is next"
-              }
+              "notes": "What happened. Next: the next step",
+              "checkpoint": "C"
             }
           }
         }
@@ -43,34 +50,41 @@ Artifact folders use the **flat** layout: `initiatives/[Initiative]/[Project]/[I
 }
 ```
 
+That is the whole schema. `checkpoint` appears only on Build-stage ideas.
+
 The JSON key `projects` is the registry nest — it does **not** mean a `projects/` folder on disk.
+
+## `lastWork` rule
+
+Initiative `lastWork` is the date of the most recent work of **any** kind on that initiative — lifecycle stages, but also documents edited outside a stage, `outputs/` and `wiki/` changes, code in a project `repo/`, research, and registry or structural changes. Set it to today whenever a session changes anything for the initiative, and never move it backwards. It drives the staleness bonus in [`PRIORITIZATION.md`](../PRIORITIZATION.md) (**Any work counts toward `lastWork`**).
 
 ## Lifecycle values
 
 `Backlog`, `Brief`, `PressureTest`, `Research`, `PRD`, `Design`, `Build`, `Evaluation`, `Launch`, `Marketing`, `Growth`, `In Review`, `On Hold`, `Dropped`, `Done`
 
-**Approval queue:** any idea with `lifecycle: "In Review"` appears in the Web UI approval table (`GET /api/approval-queue`).
+**Approval queue:** any idea with `lifecycle: "In Review"` appears in the Web UI approval table (`GET /api/approval-queue`). The view works out which stage is under review and links the latest artifact in the idea folder — do **not** put a `reviewDocumentPath:` line in `notes` (retired convention; old lines are harmless and ignored).
 
-## Build checkpoint object
+## Build `checkpoint` (one field)
 
-The optional `checkpoint` object on an idea entry is the **only** data source for the Web UI **Build Checkpoints** table (`PriorityWorkspace` → `BuildCheckpoints`). An in-flight Build idea **without** this object does not appear in that table, even though it shows in the initiative tree — so any idea that has a `05_build_plan.md` (drafted or approved) or has reached a Build checkpoint must carry one.
+At Build, set `checkpoint` on the idea to the **id of the checkpoint the build is at or heading toward**, exactly as it appears in the `05_build_plan.md` heading (`"A"`, `"C"`, `"2"`). That is the only checkpoint data agents store.
 
-**When to write it:** create the object when the Build Plan (gate 6a) is drafted or approved, and update it at every checkpoint stop (`current`, `index`, `status`, `label`, `asOf`, `reason`). This belongs in the same closure checklist that updates `lifecycle` / `lastUpdated` / `notes` (see `AGENTS.md` item 4 and `SYSTEM_OVERVIEW.md` **Build checkpoint discipline**).
+- **When to set it:** when the Build Plan (gate 6a) is drafted, and at every checkpoint stop. It is part of the closure checklist with `lifecycle`, `lastUpdated` and `notes` (see `AGENTS.md` item 4 and `SYSTEM_OVERVIEW.md` **Build checkpoint discipline**).
+- **When to remove it:** never required. Once the idea leaves Build, the view ignores it.
+- **Do not store** the checkpoint count, position, milestone name, gate status, evidence path, date, or reason. The view reads count and names from the plan headings, the date from `lastUpdated`, the next step from the `Next:` line in `notes`, and the gate from `lifecycle`.
 
-**When to remove it:** delete the object when the build completes or its plan is superseded. Absence is the table's filter — finished and abandoned builds simply drop out, so there is nothing to hide and no toggle to maintain.
+A Build idea with a `05_build_plan.md` appears in the Web UI **Build Checkpoints** table whether or not `checkpoint` is set; a missing or unknown id shows as **not recorded** so the gap is visible.
 
-**Fields:**
+### `lifecycle` is the eligibility signal
 
-| Field | Required | Meaning |
-|---|---|---|
-| `current` | yes | Label of the checkpoint the build is at or heading toward (e.g. `"A"`, `"C"`). |
-| `index` | yes | Zero-based position of `current` among the plan's checkpoints. |
-| `total` | yes | Number of checkpoints in the Build Plan. |
-| `status` | yes | `"In Review"` (amber — owner-blocked, needs you) or `"Ready"` (blue — the agent loop can take the next slice). Owner-blocked rows sort first. |
-| `label` | no | Short human milestone name for the current checkpoint. |
-| `asOf` | no | `YYYY-MM-DD` the checkpoint state was last set. |
-| `evidence` | no | Path (relative to harness root) to the `05_build_plan.md` or `05_build/verification_log.md` backing this state. |
-| `reason` | no | One line on what the gate is waiting on or what task is next. |
+There is no separate checkpoint status. At Build:
+
+- **`lifecycle: "Build"`** — the next action is an **agent-executable slice**. The idea is eligible for next-work. An *upcoming* owner checkpoint later in the plan does not change this — keep `Build` right up until the slice before that checkpoint is done.
+- **`lifecycle: "In Review"`** — the build is **owner-gated** (Build Plan awaiting approval, or a checkpoint gate open). Not eligible for new slice work until the owner clears it.
+
+Rules that keep the signal honest:
+
+1. **If the next thing the idea needs is an owner action, `lifecycle` is `In Review`.** A slice the agent cannot finish in its environment counts as owner-gated once the authorable part is written — set `In Review` with the owner steps in the checkpoint section of `05_build_plan.md`.
+2. **When `In Review`, `notes` names the exact next owner step on a `Next:` line** (e.g. `Next: owner builds Spike scheme in Xcode and records the M0 go/no-go`), so the next run and the Web UI both know who is blocked and on what.
 
 ## Add idea (with brief)
 
@@ -82,11 +96,11 @@ The optional `checkpoint` object on an idea entry is the **only** data source fo
   "priority": "Medium",
   "lifecycle": "In Review",
   "lastUpdated": "2026-05-29",
-  "notes": "Brief drafted — awaiting approval → Pressure Test (`02_pressure_test.md`).\nreviewDocumentPath: initiatives/Initiative/Project/Idea/01_brief.md"
+  "notes": "Brief drafted — awaiting approval. Next: approve → Pressure Test (`02_pressure_test.md`)."
 }
 ```
 
-3. Set initiative `lastWork` to today when the session counts as substantive progress.
+3. Set initiative `lastWork` to today (any work on the initiative counts — see **`lastWork` rule** above).
 4. Set brief front matter `**Status:** In Review` to match.
 
 Registry is `priorities.json` only. Do not add a markdown registry file.
@@ -94,7 +108,7 @@ Registry is `priorities.json` only. Do not add a markdown registry file.
 ## Approve idea
 
 1. Update the approved artifact (`**Status:** Approved`, approval stamp).
-2. In `priorities.json`, set `lifecycle` to the next stage (e.g. `PressureTest` after Brief approval). Remove `In Review`. Clear or update `reviewDocumentPath` in `notes`.
+2. In `priorities.json`, set `lifecycle` to the next stage (e.g. `PressureTest` after Brief approval). Remove `In Review`.
 3. Update `lastUpdated` and `notes` with the next artifact path.
 
 ## Add project

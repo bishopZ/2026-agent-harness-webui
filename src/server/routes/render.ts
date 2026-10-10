@@ -15,7 +15,7 @@ export function createRenderRouter(harnessRoot: string): Router {
    * and returns { html: string }.
    *
    * `path` may be initiatives-relative (sidebar) or harness-root
-   * (`reviewDocumentPath` / AGENTS.md). See normalizeRenderPath.
+   * (approval-queue review links). See normalizeRenderPath.
    */
   router.get('/', (req, res) => {
     const requestedPath = req.query['path'] as string | undefined;

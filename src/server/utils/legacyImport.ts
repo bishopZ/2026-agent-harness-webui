@@ -55,10 +55,18 @@ function extractLinkUrl(cell: string): string | null {
   return m ? m[1].trim() : null;
 }
 
+/**
+ * Map a markdown Priority cell to a canonical label.
+ * Five levels; numeric aliases run 1 (Very High) to 5 (Very Low).
+ * Anything unrecognised falls back to Medium.
+ */
 export function normalisePriority(raw: string): string {
-  const lower = raw.toLowerCase();
-  if (lower === 'high' || lower === '1') return 'High';
-  if (lower === 'low' || lower === '3') return 'Low';
+  const lower = raw.toLowerCase().replace(/[\s_-]+/g, ' ').trim();
+  if (lower === 'very high' || lower === '1') return 'Very High';
+  if (lower === 'high' || lower === '2') return 'High';
+  if (lower === 'medium' || lower === '3') return 'Medium';
+  if (lower === 'low' || lower === '4') return 'Low';
+  if (lower === 'very low' || lower === '5') return 'Very Low';
   return 'Medium';
 }
 

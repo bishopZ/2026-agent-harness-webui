@@ -1,9 +1,6 @@
 import { Router } from 'express';
 import { loadCurrentSidecar } from '../utils/reconcileSidecar.js';
-import {
-  lifecycleDisplayForIdea,
-  parseReviewDocumentPath,
-} from '../utils/reviewStageFromPath.js';
+import { deriveIdeaView } from '../utils/ideaView.js';
 
 export interface QueueItem {
   initiative: string;
@@ -21,8 +18,9 @@ export interface QueueItem {
  * Reads priorities.json and returns an array of every idea whose lifecycle
  * field equals "In Review".  Returns [] when nothing is pending.
  *
- * `lifecycle` in each row is the stage being reviewed (from reviewDocumentPath),
- * since every queue item is already In Review by definition.
+ * The registry only says *that* an idea is waiting. Which stage is under
+ * review and which document to open are derived from the idea folder (latest
+ * stage artifact on disk) — see `ideaView.ts`. Agents do not record them.
  *
  * Response shape: QueueItem[]
  */
@@ -37,17 +35,19 @@ export function createApprovalQueueRouter(harnessRoot: string): Router {
       for (const [initName, initEntry] of Object.entries(sidecar.initiatives)) {
         for (const [projName, projEntry] of Object.entries(initEntry.projects)) {
           for (const [ideaName, ideaEntry] of Object.entries(projEntry.ideas)) {
-            if (ideaEntry.lifecycle === 'In Review') {
-              const reviewDocumentPath = parseReviewDocumentPath(ideaEntry.notes);
-              queue.push({
-                initiative: initName,
-                project: projName,
-                idea: ideaName,
-                lifecycle: lifecycleDisplayForIdea(ideaEntry),
-                lastUpdated: ideaEntry.lastUpdated,
-                ...(reviewDocumentPath !== undefined && { reviewDocumentPath }),
-              });
-            }
+            if (ideaEntry.lifecycle !== 'In Review') continue;
+
+            const view = deriveIdeaView(harnessRoot, initName, projName, ideaName, ideaEntry);
+            queue.push({
+              initiative: initName,
+              project: projName,
+              idea: ideaName,
+              lifecycle: view.stage,
+              lastUpdated: ideaEntry.lastUpdated,
+              ...(view.reviewDocumentPath !== undefined && {
+                reviewDocumentPath: view.reviewDocumentPath,
+              }),
+            });
           }
         }
       }

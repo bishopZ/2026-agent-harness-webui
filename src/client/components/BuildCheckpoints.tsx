@@ -5,10 +5,16 @@
  * panel is the at-a-glance version: one row per in-flight build, owner-blocked
  * gates first.
  *
- * Finished and abandoned builds never reach here — when a build completes or
- * its plan is superseded, the `checkpoint` object is removed from that idea in
- * `priorities.json`. Absence is the filter, so there is nothing to hide and no
- * toggle to maintain.
+ * Everything here is derived. priorities.json stores only the idea's
+ * `lifecycle`, `lastUpdated`, `notes` and a one-word `checkpoint` id; the
+ * server view (`ideaView.ts`) adds the build plan link, the checkpoint list
+ * parsed from the plan's headings, and the position of the current one. The
+ * gate is the idea's In Review flag, "as of" is `lastUpdated`, and the
+ * subtitle is the "Next:" line from notes.
+ *
+ * An idea is listed while its stage is Build and it has a `05_build_plan.md`.
+ * When the build finishes, its lifecycle moves on and it drops out — no
+ * cleanup step for agents.
  *
  * Read-only. Column sort is client-only; refresh restores the default order
  * (most-blocking gate first), same as ApprovalQueue.
@@ -16,7 +22,9 @@
 import { useState } from 'react';
 import type { DiscoverData } from './InitiativeTable.js';
 import {
+  CHECKPOINT_GATE_COLORS,
   CHECKPOINT_STATUS_ORDER,
+  checkpointGate,
   compareCheckpointProgress,
   compareCheckpointStatus,
   compareDates,
@@ -30,14 +38,16 @@ export interface CheckpointRow {
   project: string;
   idea: string;
   lifecycle: string;
+  /** Checkpoint id from the registry; '' when not recorded. */
   current: string;
+  /** Checkpoints cleared; -1 when the current one is unknown. */
   index: number;
   total: number;
   status: string;
   label?: string;
   reason?: string;
   asOf?: string;
-  buildPlanPath?: string;
+  buildPlanPath: string;
 }
 
 /** Owner-blocked first, then in-flight, then settled. Shared with the sort util. */
@@ -76,32 +86,27 @@ const compareRows = (
   }
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  'In Review': '#b45309',  // amber — needs you, same signal as the approval queue
-  Ready: '#0369a1',        // blue — agent loop can take it
-};
-
 export function collectCheckpointRows(data: DiscoverData): CheckpointRow[] {
   const rows: CheckpointRow[] = [];
 
   for (const [initiative, init] of Object.entries(data.initiatives ?? {})) {
     for (const [project, proj] of Object.entries(init.projects ?? {})) {
       for (const [idea, entry] of Object.entries(proj.ideas ?? {})) {
-        const cp = entry.checkpoint;
-        if (!cp) continue;
+        const build = entry.view?.build;
+        if (!build) continue;
         rows.push({
           initiative,
           project,
           idea,
-          lifecycle: entry.lifecycle,
-          current: cp.current,
-          index: cp.index,
-          total: cp.total,
-          status: cp.status,
-          label: cp.label,
-          reason: cp.reason,
-          asOf: cp.asOf,
-          buildPlanPath: cp.buildPlanPath,
+          lifecycle: entry.view.stage,
+          current: build.current ?? '',
+          index: build.index,
+          total: build.checkpoints.length,
+          status: checkpointGate(entry.view.inReview),
+          label: build.name,
+          reason: entry.view.next,
+          asOf: entry.lastUpdated,
+          buildPlanPath: build.planPath,
         });
       }
     }
@@ -181,7 +186,7 @@ export function BuildCheckpoints({ data }: { data: DiscoverData }) {
           </thead>
           <tbody>
             {displayRows.map((r, idx) => {
-              const color = STATUS_COLORS[r.status] ?? '#374151';
+              const color = CHECKPOINT_GATE_COLORS[r.status as keyof typeof CHECKPOINT_GATE_COLORS] ?? '#374151';
               const blocking = isOwnerBlocked(r.status);
 
               return (
@@ -190,21 +195,15 @@ export function BuildCheckpoints({ data }: { data: DiscoverData }) {
                   style={idx % 2 === 0 ? rowEvenStyle : rowOddStyle}
                 >
                   <td style={tdStyle}>
-                    {r.buildPlanPath ? (
-                      <a
-                        href={`/doc?path=${encodeURIComponent(r.buildPlanPath)}`}
-                        style={planLinkStyle}
-                        title={`Open build plan — ${r.buildPlanPath}`}
-                      >
-                        {r.idea}
-                      </a>
-                    ) : (
-                      // No link rather than a guessed one: the plan is missing
-                      // from disk, which is itself worth noticing.
-                      <span style={{ fontWeight: 500 }}>{r.idea}</span>
-                    )}
-                    {/* Once status is binary, "what has to happen next" carries
-                        more than the milestone name. Fall back to the label. */}
+                    <a
+                      href={`/doc?path=${encodeURIComponent(r.buildPlanPath)}`}
+                      style={planLinkStyle}
+                      title={`Open build plan — ${r.buildPlanPath}`}
+                    >
+                      {r.idea}
+                    </a>
+                    {/* "What has to happen next" (notes) carries more than the
+                        milestone name. Fall back to the label. */}
                     {(r.reason ?? r.label) && (
                       <div style={labelStyle}>{r.reason ?? r.label}</div>
                     )}
@@ -213,7 +212,20 @@ export function BuildCheckpoints({ data }: { data: DiscoverData }) {
                     {r.initiative} › {r.project}
                   </td>
                   <td style={tdStyle}>
-                    <span style={chipStyle}>{r.current}</span>
+                    {r.index >= 0 ? (
+                      <span style={chipStyle} title={r.label}>{r.current}</span>
+                    ) : (
+                      <span
+                        style={missingStyle}
+                        title={
+                          r.current
+                            ? `priorities.json says checkpoint ${r.current}, but the build plan has no such heading.`
+                            : 'No checkpoint id in priorities.json. Set "checkpoint": "<id>" on the idea.'
+                        }
+                      >
+                        {r.current ? `${r.current}?` : 'not recorded'}
+                      </span>
+                    )}
                   </td>
                   <td style={tdStyle}>
                     <ProgressBar index={r.index} total={r.total} color={color} />
@@ -259,7 +271,7 @@ function ProgressBar({
         ))}
       </span>
       <span style={monoStyle}>
-        {index}/{total}
+        {index >= 0 ? index : '?'}/{total}
       </span>
     </span>
   );
@@ -342,6 +354,11 @@ const blockedNoteStyle: React.CSSProperties = {
   fontSize: '0.8rem',
   color: '#b45309',
   margin: '0 0 0.5rem',
+};
+
+const missingStyle: React.CSSProperties = {
+  color: '#b91c1c',
+  fontSize: '0.75rem',
 };
 
 const emptyStyle: React.CSSProperties = {

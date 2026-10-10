@@ -27,7 +27,7 @@ Run all steps in order.
 1. Locate the idea in `priorities.json` under `initiatives.[Initiative].projects.[Project].ideas.[Idea]`.
 2. Confirm `lifecycle` is `In Review`. If it is not `In Review`, report the current lifecycle and ask whether to continue anyway.
 3. Identify the stage that was just finished.
-   - Prefer `notes` (and any `reviewDocumentPath` line) in `priorities.json`.
+   - Prefer `notes` in `priorities.json`; the document under review is the latest lifecycle artifact in the idea folder.
    - If unclear, infer from the linked artifact or from the idea folder at `initiatives/[Initiative]/[Project]/[Idea]/`.
 4. Determine the next `lifecycle` value.
    - **Elaboration** (thin idea) approved -> set lifecycle to **`Brief`** when brief drafting is next, or **`Backlog`** if `IDEA_LIFECYCLE.md` says the entry should stay there until Brief starts. Match what the notes say.
@@ -50,8 +50,8 @@ Run all steps in order.
    - Set `lifecycle` to the next stage from step 4 (**not** `In Review`).
    - Set `lastUpdated` to today, `YYYY-MM-DD`.
    - Refresh `notes` to reflect the approved state and the exact next step.
-   - **Remove** the `reviewDocumentPath:` line from `notes` (the idea is leaving `In Review`).
-7. If you made substantive progress on the initiative today, set that initiative `lastWork` to today.
+   - If an old `reviewDocumentPath:` line is still in `notes`, remove it (retired convention).
+7. Set that initiative `lastWork` to today — approving, and any other work on the initiative, counts.
 8. Return a short completion summary that names:
    - The approved idea.
    - The new lifecycle.

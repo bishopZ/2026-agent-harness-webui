@@ -20,9 +20,15 @@ Copy `.env.example` to `.env` and set `HARNESS_ROOT` to this directory.
 **Location:** `${HARNESS_ROOT}/priorities.json`
 
 - Web UI edits: `tier`, `priority` (via `POST /api/priorities`)
-- Agents edit: `lifecycle`, `lastWork`, `lastUpdated`, `notes`, `purpose`
+- Agents edit: `lifecycle`, `lastWork`, `lastUpdated`, `notes`, `purpose`, and at Build a one-word `checkpoint`
 
 Approval queue: derived from ideas with `lifecycle === "In Review"`.
+
+### Simple registry, smart view
+
+`priorities.json` is kept deliberately simple so agents can update it by hand without mistakes. The UI does the work: the server's `src/server/utils/ideaView.ts` adds a derived `view` to every idea in `GET /api/discover` — the stage under review and its document (latest artifact in the idea folder), the build checkpoint list and progress (headings in `05_build_plan.md` plus the one-word `checkpoint` id), the gate (`lifecycle`), and the next step (`Next:` line in `notes`). Nothing in `view` is ever written back.
+
+When you add a dashboard feature, derive what it needs in the view. Do not add fields to `priorities.json` for display. See [`docs/priorities-registry.md`](docs/priorities-registry.md) **Design rule**.
 
 ## Folder layout
 
