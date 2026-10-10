@@ -9,11 +9,19 @@ import {
 
 const EXPANDED_STORAGE_KEY = 'harness-sidebar-expanded';
 
+/** Tree paths are relative to initiatives/; copied paths are relative to HARNESS_ROOT. */
+const toHarnessPath = (treePath: string): string => `initiatives/${treePath}`;
+
 /**
  * Sidebar — Doc reader file tree (read-only navigation).
  *
  * F-07 compliance: zero <input>, <select>, or <textarea> elements.
  * All interaction is via <button> elements only.
+ *
+ * Hovering a row shows two actions on the right: copy the path (relative to
+ * HARNESS_ROOT) and open in Finder (a file opens its containing folder).
+ * repo / repos / sources folders are single rows that open in Finder, with no
+ * hover actions.
  */
 
 const readExpandedFromStorage = (): Set<string> => {
@@ -35,6 +43,9 @@ const writeExpandedToStorage = (expanded: Set<string>): void => {
 
 export function Sidebar() {
   const [files, setFiles] = useState<string[]>([]);
+  const [linkFolders, setLinkFolders] = useState<string[]>([]);
+  const [copiedPath, setCopiedPath] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(readExpandedFromStorage);
@@ -43,7 +54,7 @@ export function Sidebar() {
   const currentPath = searchParams.get('path') ?? '';
   const selectedPath = normalizeSidebarPath(currentPath);
   const selectedRef = useRef<HTMLButtonElement | null>(null);
-  const tree = buildFileTree(files);
+  const tree = buildFileTree(files, linkFolders);
 
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
     if (typeof window === 'undefined' || window.innerWidth <= 768) return 260;
@@ -95,7 +106,23 @@ export function Sidebar() {
         setError(String(err));
         setLoading(false);
       });
+    fetch('/api/files/folders')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: string[]) => setLinkFolders(Array.isArray(data) ? data : []))
+      .catch(() => setLinkFolders([]));
   }, []);
+
+  // Clear transient action feedback.
+  useEffect(() => {
+    if (!copiedPath) return;
+    const t = window.setTimeout(() => setCopiedPath(null), 1200);
+    return () => window.clearTimeout(t);
+  }, [copiedPath]);
+  useEffect(() => {
+    if (!actionError) return;
+    const t = window.setTimeout(() => setActionError(null), 3000);
+    return () => window.clearTimeout(t);
+  }, [actionError]);
 
   // Deep link / selection: expand ancestors and persist so revisit keeps them open.
   useEffect(() => {
@@ -142,26 +169,99 @@ export function Sidebar() {
     navigate(`/doc?path=${encodeURIComponent(filePath)}`);
   }
 
+  async function copyPath(treePath: string) {
+    try {
+      await navigator.clipboard.writeText(toHarnessPath(treePath));
+      setCopiedPath(treePath);
+    } catch {
+      setActionError('Could not copy to clipboard');
+    }
+  }
+
+  async function revealInFinder(treePath: string) {
+    try {
+      const res = await fetch('/api/files/reveal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: treePath }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+    } catch {
+      setActionError('Could not open in Finder');
+    }
+  }
+
+  /** Copy + Finder buttons, right-aligned, shown on row hover / focus. */
+  function rowActions(node: FileTreeNode) {
+    const copied = copiedPath === node.path;
+    return (
+      <span className="sb-actions" style={actionsStyle}>
+        <button
+          type="button"
+          style={iconButtonStyle}
+          onClick={() => copyPath(node.path)}
+          title={copied ? 'Copied' : `Copy path: ${toHarnessPath(node.path)}`}
+          aria-label={`Copy path of ${node.name}`}
+        >
+          {copied ? <CheckIcon /> : <CopyIcon />}
+        </button>
+        <button
+          type="button"
+          style={iconButtonStyle}
+          onClick={() => revealInFinder(node.path)}
+          title={node.type === 'file' ? 'Show in Finder' : 'Open in Finder'}
+          aria-label={`Open ${node.name} in Finder`}
+        >
+          <ExternalLinkIcon />
+        </button>
+      </span>
+    );
+  }
+
   function renderNodes(nodes: FileTreeNode[], depth: number): React.ReactNode {
     return nodes.map((node) => {
       const padLeft = `calc(0.75rem + ${depth * 0.85}rem)`;
+
+      if (node.type === 'link') {
+        return (
+          <li key={`link:${node.path}`} style={{ listStyle: 'none' }}>
+            <div className="sb-row" style={rowWrapStyle}>
+              <button
+                type="button"
+                onClick={() => revealInFinder(node.path)}
+                style={{ ...rowButtonStyle, paddingLeft: padLeft }}
+                title={`Open ${toHarnessPath(node.path)} in Finder`}
+              >
+                <span style={twirlSpacerStyle} aria-hidden="true" />
+                <span style={labelStyle}>{node.name}</span>
+                <span style={inlineLinkIconStyle} aria-hidden="true">
+                  <ExternalLinkIcon />
+                </span>
+              </button>
+            </div>
+          </li>
+        );
+      }
 
       if (node.type === 'dir') {
         const isOpen = expanded.has(node.path);
         return (
           <li key={`dir:${node.path}`} style={{ listStyle: 'none' }}>
-            <button
-              type="button"
-              onClick={() => toggleDir(node.path)}
-              style={{ ...rowButtonStyle, paddingLeft: padLeft }}
-              aria-expanded={isOpen}
-              title={node.path}
-            >
-              <span style={twirlStyle} aria-hidden="true">
-                {isOpen ? '▼' : '▶'}
-              </span>
-              <span style={labelStyle}>{node.name}</span>
-            </button>
+            <div className="sb-row" style={rowWrapStyle}>
+              <button
+                type="button"
+                onClick={() => toggleDir(node.path)}
+                style={{ ...rowButtonStyle, paddingLeft: padLeft }}
+                aria-expanded={isOpen}
+                title={node.path}
+              >
+                <span style={twirlStyle} aria-hidden="true">
+                  {isOpen ? '▼' : '▶'}
+                </span>
+                <span style={labelStyle}>{node.name}</span>
+              </button>
+              {rowActions(node)}
+            </div>
             {isOpen && (
               <ul style={nestedListStyle} role="list">
                 {renderNodes(node.children, depth + 1)}
@@ -174,23 +274,25 @@ export function Sidebar() {
       const isSelected = node.path === selectedPath;
       return (
         <li key={`file:${node.path}`} style={{ listStyle: 'none' }}>
-          <button
-            type="button"
-            ref={isSelected ? selectedRef : undefined}
-            onClick={() => handleFileClick(node.path)}
-            style={{
-              ...rowButtonStyle,
-              paddingLeft: padLeft,
-              background: isSelected ? '#dbeafe' : 'transparent',
-              fontWeight: isSelected ? '600' : '400',
-            }}
-            title={node.path}
-            aria-current={isSelected ? 'page' : undefined}
-            data-path={node.path}
-          >
-            <span style={twirlSpacerStyle} aria-hidden="true" />
-            <span style={labelStyle}>{node.name}</span>
-          </button>
+          <div className="sb-row" data-selected={isSelected ? 'true' : undefined} style={rowWrapStyle}>
+            <button
+              type="button"
+              ref={isSelected ? selectedRef : undefined}
+              onClick={() => handleFileClick(node.path)}
+              style={{
+                ...rowButtonStyle,
+                paddingLeft: padLeft,
+                fontWeight: isSelected ? '600' : '400',
+              }}
+              title={node.path}
+              aria-current={isSelected ? 'page' : undefined}
+              data-path={node.path}
+            >
+              <span style={twirlSpacerStyle} aria-hidden="true" />
+              <span style={labelStyle}>{node.name}</span>
+            </button>
+            {rowActions(node)}
+          </div>
         </li>
       );
     });
@@ -198,10 +300,16 @@ export function Sidebar() {
 
   return (
     <aside style={{ ...sidebarStyle, width: `${sidebarWidth}px` }} aria-label="File tree">
+      <style>{rowHoverCss}</style>
       <div style={headerStyle}>
         <span style={{ fontWeight: 600, fontSize: '0.8rem', color: '#374151' }}>
           Harness Files
         </span>
+        {actionError && (
+          <span role="status" style={{ marginLeft: '0.5rem', fontSize: '0.7rem', color: '#b91c1c' }}>
+            {actionError}
+          </span>
+        )}
       </div>
       {loading && (
         <p style={{ padding: '0.5rem', color: '#888', fontSize: '0.8rem' }}>
@@ -227,7 +335,97 @@ export function Sidebar() {
   );
 }
 
+// ── Icons ──────────────────────────────────────────────────────────────────────
+
+const iconProps = {
+  width: 12,
+  height: 12,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 2,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+  'aria-hidden': true,
+};
+
+function CopyIcon() {
+  return (
+    <svg {...iconProps}>
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function ExternalLinkIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M15 3h6v6" />
+      <path d="M10 14 21 3" />
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    </svg>
+  );
+}
+
 // ── Styles ─────────────────────────────────────────────────────────────────────
+
+/** Hover/focus rules can't be inline styles, so they live here. */
+const rowHoverCss = `
+.sb-row { --sb-row-bg: #f9fafb; background: transparent; }
+.sb-row:hover { --sb-row-bg: #eef1f5; background: var(--sb-row-bg); }
+.sb-row[data-selected="true"] { --sb-row-bg: #dbeafe; background: var(--sb-row-bg); }
+.sb-row .sb-actions { opacity: 0; pointer-events: none; background: var(--sb-row-bg); }
+.sb-row:hover .sb-actions,
+.sb-row:has(:focus-visible) .sb-actions { opacity: 1; pointer-events: auto; }
+.sb-actions button:hover { color: #111827; background: rgba(0, 0, 0, 0.06); }
+`;
+
+const rowWrapStyle: React.CSSProperties = {
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+};
+
+const actionsStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  right: 0,
+  bottom: 0,
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.1rem',
+  paddingLeft: '0.35rem',
+  paddingRight: '0.35rem',
+};
+
+const iconButtonStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '1.25rem',
+  height: '1.25rem',
+  padding: 0,
+  border: 'none',
+  borderRadius: '3px',
+  background: 'transparent',
+  color: '#6b7280',
+  cursor: 'pointer',
+};
+
+const inlineLinkIconStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  flexShrink: 0,
+  color: '#6b7280',
+};
 
 const sidebarStyle: React.CSSProperties = {
   width: '260px',

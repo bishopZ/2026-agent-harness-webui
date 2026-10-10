@@ -380,7 +380,9 @@ All scripts exit 0 on pass and 1 on any failure.
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/api/health` | Returns `{ ok, harnessRoot, prioritiesPath }` |
-| `GET` | `/api/files` | JSON array of `.md` paths (relative to `HARNESS_ROOT`), sorted alphabetically |
+| `GET` | `/api/files` | JSON array of `.md` paths (relative to `initiatives/`), sorted alphabetically. `repo`, `repos` and `sources` folders are not walked. |
+| `GET` | `/api/files/folders` | JSON array of `repo` / `repos` / `sources` folder paths (relative to `initiatives/`). The sidebar shows each as one row that opens in Finder. |
+| `POST` | `/api/files/reveal` | Body: `{ path }` (relative to `initiatives/`). Opens a folder in Finder, or a file's containing folder with the file selected. 403 on path traversal, 404 if missing. |
 | `GET` | `/api/render?path=<rel>` | Renders a `.md` file to `{ html }` with relative links rewritten to `/doc?path=...` routes. Returns 403 on path traversal, 404 if missing. |
 | `GET` | `/api/discover` | Returns the full merged tree of initiatives, projects, ideas: stored fields unchanged, plus a derived `view` per idea (`stage`, `inReview`, `reviewDocumentPath`, `next`, `build`). Triggers a reconcile pass on every call. |
 | `GET` | `/api/approval-queue` | Returns `[{ initiative, project, idea, lifecycle, lastUpdated, reviewDocumentPath }]` for every idea with `lifecycle === "In Review"`. `lifecycle` here is the stage under review and `reviewDocumentPath` the latest artifact in the idea folder — both derived, not stored. |

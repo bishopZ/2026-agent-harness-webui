@@ -117,5 +117,27 @@ assert(
   'buildFileTree normalizes initiatives/ inputs'
 );
 
+// ── link folders (repo / repos / sources) ─────────────────────────────────────
+
+const withLinks = buildFileTree(
+  ['Init/Proj/Idea/01_idea.md', 'Init/Proj/notes.md'],
+  ['Init/Proj/repo', 'Init/sources']
+);
+const init = withLinks[0] as FileTreeDir;
+const proj = init.children.find((n) => n.name === 'Proj') as FileTreeDir;
+assert(
+  init.children.some((n) => n.type === 'link' && n.path === 'Init/sources'),
+  'link folder appears as a link node'
+);
+assert(
+  proj.children.map((n) => `${n.type}:${n.name}`).join(',') === 'dir:Idea,link:repo,file:notes.md',
+  'link folders sort with folders, before files'
+);
+const linkOnly = buildFileTree([], ['Solo/repo']);
+assert(
+  linkOnly[0]?.type === 'dir' && (linkOnly[0] as FileTreeDir).children[0]?.type === 'link',
+  'link folder creates its parent folders when no .md files exist'
+);
+
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed > 0 ? 1 : 0);

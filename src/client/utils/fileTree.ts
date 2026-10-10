@@ -18,7 +18,14 @@ export type FileTreeFile = {
   path: string;
 };
 
-export type FileTreeNode = FileTreeDir | FileTreeFile;
+/** A repo / repos / sources folder: shown as one row that opens in Finder. */
+export type FileTreeLink = {
+  type: 'link';
+  name: string;
+  path: string;
+};
+
+export type FileTreeNode = FileTreeDir | FileTreeFile | FileTreeLink;
 
 /** Slash-normalize and strip a leading `initiatives/` so URL paths match /api/files. */
 export const normalizeSidebarPath = (rawPath: string): string => {
@@ -55,42 +62,47 @@ type MutableFile = {
   path: string;
 };
 
-type MutableNode = MutableDir | MutableFile;
+type MutableNode = MutableDir | MutableFile | FileTreeLink;
 
+/** Folders (including link folders) before files, then by name. */
 const compareNodes = (a: FileTreeNode, b: FileTreeNode): number => {
-  if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
+  const rank = (n: FileTreeNode) => (n.type === 'file' ? 1 : 0);
+  if (rank(a) !== rank(b)) return rank(a) - rank(b);
   return a.name.localeCompare(b.name);
 };
 
 const freezeNode = (node: MutableNode): FileTreeNode => {
-  if (node.type === 'file') {
-    return { type: 'file', name: node.name, path: node.path };
+  if (node.type === 'file' || node.type === 'link') {
+    return { type: node.type, name: node.name, path: node.path };
   }
   const children = [...node.children.values()].map(freezeNode).sort(compareNodes);
   return { type: 'dir', name: node.name, path: node.path, children };
 };
 
-/** Build a nested folder/file tree from flat initiatives-relative paths. */
-export const buildFileTree = (paths: string[]): FileTreeNode[] => {
+/**
+ * Build a nested folder/file tree from flat initiatives-relative paths.
+ * `linkPaths` are folders (repo / repos / sources) shown as single rows.
+ */
+export const buildFileTree = (paths: string[], linkPaths: string[] = []): FileTreeNode[] => {
   const root = new Map<string, MutableNode>();
 
-  for (const raw of paths) {
-    const filePath = normalizeSidebarPath(raw);
-    if (!filePath) continue;
-    const parts = filePath.split('/').filter(Boolean);
-    if (parts.length === 0) continue;
+  const insert = (raw: string, leafType: 'file' | 'link'): void => {
+    const leafPath = normalizeSidebarPath(raw).replace(/\/+$/, '');
+    if (!leafPath) return;
+    const parts = leafPath.split('/').filter(Boolean);
+    if (parts.length === 0) return;
 
     let level = root;
     let prefix = '';
 
     for (let i = 0; i < parts.length; i++) {
       const name = parts[i];
-      const isFile = i === parts.length - 1;
+      const isLeaf = i === parts.length - 1;
       prefix = prefix ? `${prefix}/${name}` : name;
 
-      if (isFile) {
-        level.set(name, { type: 'file', name, path: filePath });
-        continue;
+      if (isLeaf) {
+        level.set(name, { type: leafType, name, path: leafPath });
+        return;
       }
 
       const existing = level.get(name);
@@ -98,6 +110,8 @@ export const buildFileTree = (paths: string[]): FileTreeNode[] => {
         level = existing.children;
         continue;
       }
+      // Never nest anything under a link folder.
+      if (existing?.type === 'link') return;
 
       const dir: MutableDir = {
         type: 'dir',
@@ -108,7 +122,10 @@ export const buildFileTree = (paths: string[]): FileTreeNode[] => {
       level.set(name, dir);
       level = dir.children;
     }
-  }
+  };
+
+  for (const raw of linkPaths) insert(raw, 'link');
+  for (const raw of paths) insert(raw, 'file');
 
   return [...root.values()].map(freezeNode).sort(compareNodes);
 };
