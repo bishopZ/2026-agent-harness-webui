@@ -1,4 +1,5 @@
 export const REVIEW_LIFECYCLE_STAGES = [
+  'Backlog',
   'Brief',
   'Pressure Test',
   'Research',

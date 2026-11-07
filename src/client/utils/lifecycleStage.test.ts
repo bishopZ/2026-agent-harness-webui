@@ -12,6 +12,7 @@ const assert = (condition: boolean, message: string) => {
 
 const shuffledStages = [
   'Build',
+  'Backlog',
   'Growth',
   'Research',
   'Brief',

@@ -70,6 +70,25 @@ const main = async () => {
     'buildDiscoverResponse must not mutate the sidecar idea'
   );
 
+  // Backlog ideas live only in priorities.json (no folder until the Brief
+  // starts). Reconcile must keep them; it still prunes other folderless ideas.
+  const registry = JSON.parse(fs.readFileSync(path.join(tmp, 'priorities.json'), 'utf8')) as PrioritiesFile;
+  const general = registry.initiatives['TestInit']!.projects['General']!;
+  general.ideas['Captured idea'] = {
+    priority: 'High', lifecycle: 'Backlog', lastUpdated: '2026-10-11', notes: 'Next: draft brief.',
+  };
+  general.ideas['Moved idea'] = {
+    priority: 'Medium', lifecycle: 'Brief', lastUpdated: '2026-10-11', notes: '',
+  };
+  fs.writeFileSync(path.join(tmp, 'priorities.json'), JSON.stringify(registry, null, 2));
+
+  const after = await reconcile(tmp);
+  const afterIdeas = after.initiatives['TestInit']!.projects['General']!.ideas;
+  assert(afterIdeas['Captured idea']?.lifecycle === 'Backlog', 'Backlog idea without a folder survives reconcile');
+  assert(afterIdeas['Captured idea']?.notes === 'Next: draft brief.', 'Backlog idea fields preserved');
+  assert(afterIdeas['Moved idea'] === undefined, 'non-Backlog idea without a folder is still pruned');
+  assert(afterIdeas['Test Idea'] !== undefined, 'folder-backed idea untouched');
+
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('reconcileSidecar.test.ts: all assertions passed');
 };

@@ -38,10 +38,15 @@ async function writeSidecar(harnessRoot: string, data: PrioritiesFile): Promise<
 
 // ─── Merge helpers ────────────────────────────────────────────────────────────
 
+/** Ideas that legitimately have no folder on disk yet (lifecycle Backlog). */
+export const isRegistryOnlyIdea = (entry: Pick<IdeaEntry, 'lifecycle'>): boolean =>
+  (entry.lifecycle ?? '').trim().toLowerCase() === 'backlog';
+
 /**
  * Merge the filesystem tree into the existing sidecar data:
  * - ADD keys missing from sidecar (with defaults)
  * - PRUNE keys in sidecar that have no matching filesystem folder
+ *   (except Backlog ideas, which have no folder until their Brief starts)
  * - PRESERVE existing values for keys present in both
  *
  * Mutates `sidecar` in place.
@@ -79,11 +84,13 @@ function mergeTrees(sidecar: PrioritiesFile, tree: HarnessTree, harnessRoot: str
       const sidecarProj: ProjectEntry = sidecarInit.projects[projName];
       const fsIdeaNames = new Set(Object.keys(projNode.ideas));
 
-      // Prune stale ideas
-      for (const ideaName of Object.keys(sidecarProj.ideas)) {
-        if (!fsIdeaNames.has(ideaName)) {
-          delete sidecarProj.ideas[ideaName];
-        }
+      // Prune stale ideas. Backlog ideas are registry-only by design (the
+      // folder is created when the Brief starts), so a missing folder is
+      // expected for them — never prune those.
+      for (const [ideaName, ideaEntry] of Object.entries(sidecarProj.ideas)) {
+        if (fsIdeaNames.has(ideaName)) continue;
+        if (isRegistryOnlyIdea(ideaEntry)) continue;
+        delete sidecarProj.ideas[ideaName];
       }
 
       // Add missing ideas (infer lifecycle from artifacts; never overwrite existing)

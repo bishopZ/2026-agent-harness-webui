@@ -22,7 +22,7 @@ Copy `.env.example` to `.env` and set `HARNESS_ROOT` to this directory.
 - Web UI edits: `tier`, `priority` (via `POST /api/priorities`)
 - Agents edit: `lifecycle`, `lastWork`, `lastUpdated`, `notes`, `purpose`, and at Build a one-word `checkpoint`
 
-Approval queue: derived from ideas with `lifecycle === "In Review"`.
+Approval queue: derived from ideas with `lifecycle === "In Review"` (server, `GET /api/approval-queue`) plus ideas with `lifecycle === "Backlog"` (added in the React client from `/api/discover`, see `src/client/utils/approvalQueue.ts`). Agents do nothing extra — a Backlog idea shows up waiting for a go-ahead to start its Brief.
 
 ### Simple registry, smart view
 

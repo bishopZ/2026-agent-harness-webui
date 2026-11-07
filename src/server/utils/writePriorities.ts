@@ -100,7 +100,7 @@ function validateValue(suffix: AllowedSuffix, value: unknown): string | null {
  * Apply a validated priority update to priorities.json atomically.
  *
  * @param harnessRoot  Absolute path to the harness root directory.
- * @param dotPath      Dot-separated key path, e.g. "initiatives.Time2Magic.tier"
+ * @param dotPath      Dot-separated key path, e.g. "initiatives.My Company.tier"
  * @param value        The new value (type is validated per suffix rules).
  * @returns            WriteResult — `{ ok: true }` or `{ ok: false, status, message }`.
  */

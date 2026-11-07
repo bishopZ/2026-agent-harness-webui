@@ -8,8 +8,9 @@
  * No <input>, <select>, or <textarea> in the Doc reader (/doc) route (F-07).
  * This file is only mounted at / — form controls here are intentional.
  */
-import { useState, useEffect, useCallback } from 'react';
-import { ApprovalQueue, type QueueItem } from '../components/ApprovalQueue.js';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { ApprovalQueue } from '../components/ApprovalQueue.js';
+import { buildApprovalQueue, type QueueItem } from '../utils/approvalQueue.js';
 import { BuildCheckpoints, collectCheckpointRows } from '../components/BuildCheckpoints.js';
 import { InitiativeTable, type DiscoverData } from '../components/InitiativeTable.js';
 import { isOwnerBlocked } from '../utils/checkpointSort.js';
@@ -69,6 +70,13 @@ export function PriorityWorkspace() {
   }, []);
 
   // ── Derived ───────────────────────────────────────────────────────────────
+  // Server rows are In Review ideas; Backlog ideas are added here from the
+  // discover tree (front end does the work — no registry or agent change).
+  const approvalItems = useMemo(
+    () => buildApprovalQueue(queueItems, discoverData),
+    [queueItems, discoverData],
+  );
+
   const blockedCheckpoints = discoverData
     ? collectCheckpointRows(discoverData).filter(r => isOwnerBlocked(r.status)).length
     : 0;
@@ -143,11 +151,11 @@ export function PriorityWorkspace() {
         <section style={sectionStyle}>
           <h2 style={h2Style}>
             Awaiting Approval
-            {queueItems.length > 0 && (
-              <span style={badgeStyle}>{queueItems.length}</span>
+            {approvalItems.length > 0 && (
+              <span style={badgeStyle}>{approvalItems.length}</span>
             )}
           </h2>
-          <ApprovalQueue items={queueItems} />
+          <ApprovalQueue items={approvalItems} />
         </section>
       </div>
 

@@ -4,9 +4,9 @@
  * Body: { path: string, value: unknown }
  *
  * `path` is a dot-separated key into priorities.json, e.g.:
- *   "initiatives.Time2Magic.tier"
- *   "initiatives.Time2Magic.projects.Agent Harness Web UI.priority"
- *   "initiatives.Time2Magic.projects.Agent Harness Web UI.ideas.Local shell and priority forms.priority"
+ *   "initiatives.My Company.tier"
+ *   "initiatives.My Company.projects.Agent Harness Web UI.priority"
+ *   "initiatives.My Company.projects.Agent Harness Web UI.ideas.Local shell and priority forms.priority"
  *
  * Rules (ADR-AHWUI-04):
  *   - Only paths ending in ".tier" or ".priority" are accepted; others → 400.

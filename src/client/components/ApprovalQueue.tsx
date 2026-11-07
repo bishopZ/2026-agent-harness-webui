@@ -2,7 +2,9 @@
  * ApprovalQueue — read-only table of ideas awaiting approval.
  *
  * `lifecycle` is the stage under review (Brief, Pressure Test, …), inferred
- * from reviewDocumentPath — not the registry "In Review" flag.
+ * from reviewDocumentPath — not the registry "In Review" flag. Backlog ideas
+ * (captured, waiting for a go-ahead to start a Brief) are merged in on the
+ * client — see `utils/approvalQueue.ts` — and read "Backlog".
  *
  * Task 9 (Priority workspace read layer). No POST calls, no form controls.
  * Column sort is client-only; refresh restores the API order.
@@ -10,16 +12,9 @@
 
 import { useState } from 'react';
 import { compareLifecycleStages } from '../utils/lifecycleStage.js';
+import { BACKLOG_STAGE, type QueueItem } from '../utils/approvalQueue.js';
 
-export interface QueueItem {
-  initiative: string;
-  project: string;
-  idea: string;
-  /** Stage under review (Brief, Pressure Test, …). */
-  lifecycle: string;
-  lastUpdated: string;
-  reviewDocumentPath?: string;
-}
+export type { QueueItem };
 
 interface Props {
   items: QueueItem[];
@@ -115,7 +110,16 @@ export function ApprovalQueue({ items }: Props) {
                   item.idea
                 )}
               </td>
-              <td style={{ ...tdStyle, ...lifecycleStyle }}>{item.lifecycle}</td>
+              {item.lifecycle === BACKLOG_STAGE ? (
+                <td
+                  style={{ ...tdStyle, ...backlogStyle }}
+                  title="Captured idea — approve to start the Brief"
+                >
+                  {item.lifecycle}
+                </td>
+              ) : (
+                <td style={{ ...tdStyle, ...lifecycleStyle }}>{item.lifecycle}</td>
+              )}
               <td style={{ ...tdStyle, ...monoStyle }}>{item.lastUpdated}</td>
             </tr>
           ))}
@@ -174,6 +178,11 @@ const rowOddStyle: React.CSSProperties = {
 
 const lifecycleStyle: React.CSSProperties = {
   color: '#b45309',   // amber — signals "needs attention"
+  fontWeight: 500,
+};
+
+const backlogStyle: React.CSSProperties = {
+  color: '#6b7280',   // grey — waiting on a go-ahead, no document to review yet
   fontWeight: 500,
 };
 

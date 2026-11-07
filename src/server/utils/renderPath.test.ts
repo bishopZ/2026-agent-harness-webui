@@ -28,9 +28,9 @@ const assert = (condition: boolean, label: string): void => {
 console.log('\nrenderPath.test.ts\n');
 
 const sidebarStyle =
-  'Time2Magic/Agent Harness Web UI/Harness platform strategy/02_pressure_test.md';
+  'My Company/Agent Harness Web UI/Harness platform strategy/02_pressure_test.md';
 const harnessRootStyle =
-  'initiatives/Time2Magic/Agent Harness Web UI/Harness platform strategy/02_pressure_test.md';
+  'initiatives/My Company/Agent Harness Web UI/Harness platform strategy/02_pressure_test.md';
 
 const fixtureFile = path.join(harnessRoot, harnessRootStyle);
 fs.mkdirSync(path.dirname(fixtureFile), { recursive: true });

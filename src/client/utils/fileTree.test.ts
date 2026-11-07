@@ -77,7 +77,7 @@ assert(
 // ── buildFileTree ─────────────────────────────────────────────────────────────
 
 const tree = buildFileTree([
-  'Time2Magic/wiki/index.md',
+  'My Company/wiki/index.md',
   'Art of War/Pre-writing/Voice/01_brief.md',
   'Art of War/Pre-writing/Voice/02_pressure_test.md',
   'Art of War/history/notes.md',
@@ -86,7 +86,7 @@ const tree = buildFileTree([
 
 assert(tree.length === 3, 'top level has 3 nodes (2 dirs + 1 file)');
 assert(tree[0].type === 'dir' && tree[0].name === 'Art of War', 'dirs sort before files; Art of War first');
-assert(tree[1].type === 'dir' && tree[1].name === 'Time2Magic', 'Time2Magic second');
+assert(tree[1].type === 'dir' && tree[1].name === 'My Company', 'My Company second');
 assert(tree[2].type === 'file' && tree[2].name === 'zeta.md', 'root file last');
 
 const art = tree[0] as FileTreeDir;

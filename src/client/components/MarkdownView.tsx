@@ -57,6 +57,7 @@ export function MarkdownView({ filePath }: MarkdownViewProps) {
 
   return (
     <article
+      className="markdown-view"
       style={articleStyle}
       // F-07: dangerouslySetInnerHTML is read-only rendered HTML from marked;
       // no form controls are injected by the server.

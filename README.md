@@ -298,7 +298,7 @@ Migrating them incorrectly is easy. Use one of the procedures below.
    # In OLD_HARNESS: list submodule gitlinks (mode 160000)
    git ls-files --stage | grep '^160000'
    # Example line:
-   # 160000 <sha> 0       initiatives/Time2Magic/Some Project/repo
+   # 160000 <sha> 0       initiatives/My Company/Some Project/repo
 
    # In NEW_HARNESS: with .gitmodules already copied, register each gitlink:
    git update-index --add --cacheinfo 160000,<sha>,"initiatives/[Initiative]/[Project]/repo"

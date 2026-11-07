@@ -29,7 +29,7 @@ Every decision record page has a unique ID in its frontmatter so other documents
 
 ```markdown
 ---
-id: ADR-t2m-20260417-01
+id: ADR-myco-20260417-01
 domain: strategy
 type: decision-record
 status: Active        # Active | Superseded | Withdrawn
@@ -96,7 +96,7 @@ Records work the same way across domains — they just change flavor.
 
 Other artifacts cite decision records by ID:
 
-> "See ADR-t2m-20260417-01 for the decision to target prosumers before enterprise."
+> "See ADR-myco-20260417-01 for the decision to target prosumers before enterprise."
 
 This lets a reader trace any claim about direction back to the evidence and alternatives that shaped it.
 
